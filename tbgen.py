@@ -40,23 +40,6 @@ class Rule(object):
         self.protocol = Protocol(rawrule.protocol)
         self.action = rawrule.action
 
-    def matches(self, packet):
-        return self.source_host.matches(packet.source_host) and \
-               self.dest_host.matches(packet.dest_host) and \
-               self.source_port.matches(packet.source_port) and \
-               self.dest_port.matches(packet.dest_port) and \
-               self.protocol.matches(packet.protocol)
-
-    def sample_packet(self):
-        source_host = self.source_host.sample_value()
-        dest_host = self.dest_host.sample_value()
-        source_port = self.source_port.sample_value()
-        dest_port = self.dest_port.sample_value()
-        protocol = self.protocol.sample_value()
-        return Packet(source_host, num_to_addr(source_host),\
-                dest_host, num_to_addr(dest_host),
-                source_port, dest_port, protocol)
-
 
 class Parser(object):
     """ Parses the given input file and creates a list of RawRules.
