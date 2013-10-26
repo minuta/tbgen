@@ -9,8 +9,10 @@ class Parser(object):
     def parse(self):
         file_lines = self.read_file()
         splitted_rules = []
-        for line in file_lines:
-            splitted_rules.append(self.get_fields(line))
+        for id, line in enumerate(file_lines):
+            l = self.get_fields(line)
+            l.extend([self.neg_state(l), id + 1])
+            splitted_rules.append(l)
 
         return splitted_rules
 
@@ -22,9 +24,10 @@ class Parser(object):
         self.dst_port = fields[5] + fields[6] + fields[7]
         self.protocol = fields[8]
 #         self.action = action
-        return self.src_host, self.dst_host, self.src_port,\
-               self.dst_port, self.protocol
 
+        return [self.src_host, self.dst_host, self.src_port,\
+               self.dst_port, self.protocol]
+               
     def read_file(self):
         with open(self.filename) as f:
             lines = f.readlines()
@@ -36,11 +39,12 @@ class Parser(object):
         return False
 
     def neg_state(self, rule_fields):
-        state = [False, False, False, False, False]
+        state = [0, 0, 0, 0, 0]
         for i, field in enumerate(rule_fields):
             if self.is_negated(field):
-                state[i] = True
+                state[i] = 1
         return state
+
 
 # ------------------------ MAIN ---------------------------------------------
 def main():
@@ -52,8 +56,6 @@ def main():
     a = Parser(filename)
     raw_rules = a.parse()
     print raw_rules[0]
-
-    print a.neg_state(raw_rules[0])
 
 __name__ == '__main__' and main()
 
