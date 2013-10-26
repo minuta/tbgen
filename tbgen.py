@@ -1,6 +1,9 @@
 from sys import argv
 from pdb import set_trace
+import sys 
+sys.path.append('/home/qp/Dropbox/Projects/Interval') 
 
+from interval import (Interval, IntervalList)
 
 class Parser(object):
     def __init__(self, filename):
@@ -46,6 +49,12 @@ class Parser(object):
         return state
 
 
+class Abstract_Rule(object):
+    
+    def port_to_interval(self, field):
+        low_port, high_port = field.split(':')
+        return Interval(low_port, high_port)
+
 # ------------------------ MAIN ---------------------------------------------
 def main():
 #     if len(argv)>=2:
@@ -56,6 +65,9 @@ def main():
     a = Parser(filename)
     raw_rules = a.parse()
     print raw_rules[0]
+
+    r = Abstract_Rule()
+    print r.port_to_interval('10:60')
 
 __name__ == '__main__' and main()
 
