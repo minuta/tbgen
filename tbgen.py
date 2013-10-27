@@ -50,12 +50,25 @@ class Parser(object):
 
 
 class Abstract_Rule(object):
-    
     def port_to_interval(self, field):
         low_port, high_port = field.split(':')
         return Interval(low_port, high_port)
 
+    def ip_to_num(self, ip):
+        b = ''.join([bin(int(x)+256)[3:] for x in ip.split('.')])
+        return int(b, 2)
+
+    def get_subnet_minmax(self, subnet):
+        ip, mask = subnet.split('/')
+#         hostmin_bin = b[:-1] + '1'
+        return ip, mask
+        
+
+    def subnet_to_interval(self, field):
+        pass
+
 # ------------------------ MAIN ---------------------------------------------
+
 def main():
 #     if len(argv)>=2:
 #         filename = argv[1]
@@ -67,9 +80,11 @@ def main():
     print raw_rules[0]
 
     r = Abstract_Rule()
-    print r.port_to_interval('10:60')
+    ip = '10.10.10.10/20'
+    print r.get_subnet_minmax(ip)
+
+#     ip = '192.168.1.1'
+#     print ''.join([bin(int(x)+256)[3:] for x in ip.split('.')])
 
 __name__ == '__main__' and main()
-
-
 
