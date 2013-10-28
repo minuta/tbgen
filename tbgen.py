@@ -5,7 +5,7 @@ sys.path.append('/home/qp/Dropbox/Projects/Interval')
 
 from interval import (Interval, IntervalList)
 
-class Parser(object):
+class PARSER(object):
     def __init__(self, filename):
         self.filename = filename
 
@@ -14,22 +14,21 @@ class Parser(object):
         splitted_rules = []
         for id, line in enumerate(file_lines):
             l = self.get_fields(line)
-            l.extend([self.neg_state(l), id + 1])
+            negs = self.neg_state(l)
+            l = self.remove_negators(l)
+            l.extend([negs, id + 1])
             splitted_rules.append(l)
-
         return splitted_rules
 
     def get_fields(self, rule_line):
         fields = rule_line.split()
-        self.src_host = fields[0][1:]
-        self.dst_host = fields[1]
-        self.src_port = fields[2] + fields[3] + fields[4]
-        self.dst_port = fields[5] + fields[6] + fields[7]
-        self.protocol = fields[8]
+        src_host = fields[0][1:].split('/')
+        dst_host = fields[1].split('/')
+        src_port = [fields[2], fields[4]]
+        dst_port = [fields[5], fields[7]]
+        protocol = fields[8]
 #         self.action = action
-
-        return [self.src_host, self.dst_host, self.src_port,\
-               self.dst_port, self.protocol]
+        return [src_host, dst_host, src_port, dst_port, protocol]
                
     def read_file(self):
         with open(self.filename) as f:
@@ -37,17 +36,23 @@ class Parser(object):
         return lines
 
     def is_negated(self, field):
-        if field[0] == '!':
+        if len(field)!=1:
+            test_obj = field[0][0]
+        else :
+            test_obj = field[0]
+        if test_obj == '!':
             return True
         return False
 
     def neg_state(self, rule_fields):
-        state = [0, 0, 0, 0, 0]
-        for i, field in enumerate(rule_fields):
-            if self.is_negated(field):
-                state[i] = 1
-        return state
+        return [i for i, field in enumerate(rule_fields) \
+                if self.is_negated(field)]
 
+    def remove_negators(self, fields):
+        neg_status = self.neg_state(fields)
+        for i in neg_status:
+            fields[i][0]=fields[i][0][1:]
+        return fields
 
 class IP_CALC(object):
     def __init__(self, subnet):
@@ -78,7 +83,7 @@ class IP_CALC(object):
         return ".".join(map(lambda n: str(num>>n & 0xFF), [24,16,8,0]))
 
 
-class Abstract_Rule(object):
+class ABSTRACT_RULE(object):
     def port_to_interval(self, field):
         low_port, high_port = field.split(':')
         return Interval(low_port, high_port)
@@ -95,35 +100,24 @@ def main():
 #     else:
 #         exit('Usage: %s <Firewall-Rule-Set-File>' % argv[0])
     filename = 'rules'
-    a = Parser(filename)
+    a = PARSER(filename)
     raw_rules = a.parse()
-    print raw_rules[0]
-
-    r = Abstract_Rule()
-    ip = '1.1.1.1/24'
-
-    
-    s = IP_CALC('1.1.1.1/24')
-    print s.num_to_ip(16843009)
-    print s.num_to_ip(4294967040L)
-
-#     a = s.get_subnet_minhost()
-#     b = s.get_subnet_maxhost()
-# 
-#     print a, b
-#     for i in range(a, b+1):
-#         print s.num_to_bin(i)
-# 
-#     m = r.get_subnet_min(ip)
-#     print r.int_to_bin(m)
-# 
-#     ip = '192.168.1.1'
-#     print ''.join([bin(int(x)+256)[3:] for x in ip.split('.')])
+    print "-"*70
+    for i in raw_rules:
+        print i
 
 __name__ == '__main__' and main()
 
 
 # --------------------- TESTS ----------------------------------------------
+import pytest
+skip = pytest.mark.skipif
+@skip
+def test_remove_negators():
+    x = PARSER('rules') 
+    raw_rules = x.parse()
+    assert x.remove_negators(raw_rules[0]) == ['1']
+
 def test_ipcalc_init():
     s = IP_CALC('1.1.1.1/24')
     assert s.ip == '1.1.1.1' and s.mask == 24
