@@ -26,8 +26,8 @@ class PARSER(object):
         dst_host = fields[1].split('/')
         src_port = [fields[2], fields[4]]
         dst_port = [fields[5], fields[7]]
-        protocol = fields[8]
-#         self.action = action
+        protocol = fields[8].split('/')
+#         TODO: rule_action
         return [src_host, dst_host, src_port, dst_port, protocol]
                
     def read_file(self):
@@ -54,6 +54,7 @@ class PARSER(object):
         return fields
 
 class IP_CALC(object):
+
     def __init__(self, subnet):
         parts = subnet.split('/')
         self.ip = parts[0]
@@ -69,7 +70,7 @@ class IP_CALC(object):
 
     def get_subnet_minmax(self):
         if self.is_wildcard():
-            return MIN, MAX
+            return 0, 2**32 - 1
         if self.is_one_host_subnet():
             return self.ip_to_num(self.ip), self.ip_to_num(self.ip)
         host_bits = 32 - self.mask
@@ -90,6 +91,7 @@ class IP_CALC(object):
 
 
 class ABSTRACT_RULE(object):
+
     def __init__(self, src_host, dst_host, src_port, dst_port,\
                        protocol, neg_stat, rule_id):
         self.src_host = src_host
@@ -101,14 +103,19 @@ class ABSTRACT_RULE(object):
         self.rule_id = rule_id
 
     def create(self):
-        return self.subnet_to_interval(),\
-               self.subnet_to_interval(),\
-               self.port_to_interval(),\
-               self.port_to_interval(),\
-               self.protocol_to_interval()
+        return self.subnet_to_interval(self.src_host),\
+               self.subnet_to_interval(self.dst_host),\
+               self.port_to_interval(self.src_port),\
+               self.port_to_interval(self.dst_port),\
+               self.protocol_to_interval(),\
+               self.neg_stat,\
+               self.rule_id
 
     def protocol_to_interval(self):
-        return Interval(self.protocol, self.protocol)
+        protocol = map(lambda x: int(x, 0), self.protocol)
+        if protocol[1] == 0:
+            return Interval(0, 255)
+        return Interval(protocol[0], protocol[0])
 
     def port_to_interval(self, field):
         low_port, high_port = field
@@ -132,13 +139,10 @@ def main():
     a = PARSER(filename)
     raw_rules = a.parse()
     print "-"*70
-    for i in raw_rules:
-        print i
-    x = raw_rules[0]
-    print x
-    q = ABSTRACT_RULE(x[0], x[1], x[2], x[3], x[4], x[5], x[6])
-    print q.subnet_to_interval(x[0])
-
+    for x in raw_rules:
+        print x
+        q = ABSTRACT_RULE(x[0], x[1], x[2], x[3], x[4], x[5], x[6])
+        print q.create()
 
 
 __name__ == '__main__' and main()
@@ -148,11 +152,6 @@ __name__ == '__main__' and main()
 import pytest
 skip = pytest.mark.skipif
 
-@skip
-def test_remove_negators():
-    x = PARSER('rules') 
-    raw_rules = x.parse()
-    assert x.remove_negators(raw_rules[0]) == ['1']
 
 def test_ipcalc_init():
     s = IP_CALC('1.1.1.1/24')
@@ -166,6 +165,8 @@ def test_num_to_ip():
 def test_ip_to_num():
     s = IP_CALC('1.1.1.1/24')
     assert s.ip_to_num('1.1.1.1') == 16843009
+    assert s.ip_to_num('0.0.0.0') == 0                   # test min-subnet
+    assert s.ip_to_num('255.255.255.255') == 2**32 - 1   # test max-subnet
 
 def test_mask():
     s = IP_CALC('1.1.1.1/24')
@@ -175,6 +176,7 @@ def test_num_to_bin():
     s = IP_CALC('1.1.1.1/24')
     assert s.num_to_bin(16843009) == '1000000010000000100000001'
     assert s.num_to_bin(4294967040L) =='11111111111111111111111100000000'
+
 def test_get_subnet_minmax():
     s = IP_CALC('1.1.1.1/24')
     a, b = s.get_subnet_minmax()
@@ -183,5 +185,9 @@ def test_get_subnet_minmax():
     s = IP_CALC('11.12.13.14/7')
     a, b = s.get_subnet_minmax()
     assert s.num_to_ip(a) == '10.0.0.1' and s.num_to_ip(b) == '11.255.255.255'
+
+    s = IP_CALC('0.0.0.0/0')        # test Wildcard
+    a, b = s.get_subnet_minmax()
+    assert a == 0 and b == 2**32 - 1 
 
 
