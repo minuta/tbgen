@@ -100,6 +100,16 @@ class ABSTRACT_RULE(object):
         self.neg_stat = neg_stat
         self.rule_id = rule_id
 
+    def create(self):
+        return self.subnet_to_interval(),\
+               self.subnet_to_interval(),\
+               self.port_to_interval(),\
+               self.port_to_interval(),\
+               self.protocol_to_interval()
+
+    def protocol_to_interval(self):
+        return Interval(self.protocol, self.protocol)
+
     def port_to_interval(self, field):
         low_port, high_port = field
         return Interval(low_port, high_port)
