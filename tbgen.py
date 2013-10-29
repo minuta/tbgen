@@ -67,21 +67,14 @@ class IP_CALC(object):
     def long_mask(self):
         return (1 << 32) - (1 << 32 >> self.mask)
 
-    def get_subnet_minhost(self):
+    def get_subnet_minmax(self):
         if self.is_wildcard():
-            return MIN
+            return MIN, MAX
         if self.is_one_host_subnet():
-            return self.ip_to_num(self.ip)
-        return self.net_part + 1
-
-    def get_subnet_maxhost(self):
-        if self.is_wildcard():
-            return MAX
-        if self.is_one_host_subnet():
-            return self.ip_to_num(self.ip)
+            return self.ip_to_num(self.ip), self.ip_to_num(self.ip)
         host_bits = 32 - self.mask
         max_host = 1 << host_bits
-        return self.net_part + max_host - 1
+        return self.net_part + 1, self.net_part + max_host - 1
 
     def is_one_host_subnet(self):
         return self.mask == 32
@@ -114,8 +107,7 @@ class ABSTRACT_RULE(object):
     def subnet_to_interval(self, field):
         subnet, mask = field
         x = IP_CALC(subnet + '/' + mask)
-        a = x.get_subnet_minhost()
-        b = x.get_subnet_maxhost()
+        a, b = x.get_subnet_minmax()
         return Interval(a, b)
 
 
@@ -173,18 +165,13 @@ def test_num_to_bin():
     s = IP_CALC('1.1.1.1/24')
     assert s.num_to_bin(16843009) == '1000000010000000100000001'
     assert s.num_to_bin(4294967040L) =='11111111111111111111111100000000'
-
-def test_get_subnet_minhost():
+def test_get_subnet_minmax():
     s = IP_CALC('1.1.1.1/24')
-    assert s.num_to_ip(s.get_subnet_minhost()) == '1.1.1.1'
+    a, b = s.get_subnet_minmax()
+    assert s.num_to_ip(a) == '1.1.1.1' and s.num_to_ip(b) == '1.1.1.255'
 
     s = IP_CALC('11.12.13.14/7')
-    assert s.num_to_ip(s.get_subnet_minhost()) == '10.0.0.1'
+    a, b = s.get_subnet_minmax()
+    assert s.num_to_ip(a) == '10.0.0.1' and s.num_to_ip(b) == '11.255.255.255'
 
-def test_get_subnet_maxhost():
-    s = IP_CALC('1.1.1.1/24')
-    assert s.num_to_ip(s.get_subnet_maxhost()) == '1.1.1.255'
-
-    s = IP_CALC('11.12.13.14/7')
-    assert s.num_to_ip(s.get_subnet_maxhost()) == '11.255.255.255'
 
