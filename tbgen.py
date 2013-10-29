@@ -12,11 +12,11 @@ class PARSER(object):
     def parse(self):
         file_lines = self.read_file()
         splitted_rules = []
-        for id, line in enumerate(file_lines):
+        for rule_id, line in enumerate(file_lines):
             l = self.get_fields(line)
             negs = self.neg_state(l)
             l = self.remove_negators(l)
-            l.extend([negs, id + 1])
+            l.extend([negs, rule_id + 1])
             splitted_rules.append(l)
         return splitted_rules
 
@@ -36,10 +36,9 @@ class PARSER(object):
         return lines
 
     def is_negated(self, field):
+        test_obj = field[0]
         if len(field)!=1:
             test_obj = field[0][0]
-        else :
-            test_obj = field[0]
         if test_obj == '!':
             return True
         return False
@@ -69,12 +68,26 @@ class IP_CALC(object):
         return (1 << 32) - (1 << 32 >> self.mask)
 
     def get_subnet_minhost(self):
+        if self.is_wildcard():
+            return MIN
+        if self.is_one_host_subnet():
+            return self.ip_to_num(self.ip)
         return self.net_part + 1
 
     def get_subnet_maxhost(self):
+        if self.is_wildcard():
+            return MAX
+        if self.is_one_host_subnet():
+            return self.ip_to_num(self.ip)
         host_bits = 32 - self.mask
         max_host = 1 << host_bits
         return self.net_part + max_host - 1
+
+    def is_one_host_subnet(self):
+        return self.mask == 32
+
+    def is_wildcard(self):
+        return self.mask == 0
 
     def num_to_bin(self, x):
         return bin(x)[2:]
@@ -84,13 +97,27 @@ class IP_CALC(object):
 
 
 class ABSTRACT_RULE(object):
+    def __init__(self, src_host, dst_host, src_port, dst_port,\
+                       protocol, neg_stat, rule_id):
+        self.src_host = src_host
+        self.dst_host = dst_host
+        self.src_port = src_port
+        self.dst_port = dst_port
+        self.protocol = protocol
+        self.neg_stat = neg_stat
+        self.rule_id = rule_id
+
     def port_to_interval(self, field):
-        low_port, high_port = field.split(':')
+        low_port, high_port = field
         return Interval(low_port, high_port)
 
-
     def subnet_to_interval(self, field):
-        pass
+        subnet, mask = field
+        x = IP_CALC(subnet + '/' + mask)
+        a = x.get_subnet_minhost()
+        b = x.get_subnet_maxhost()
+        return Interval(a, b)
+
 
 # ------------------------ MAIN ---------------------------------------------
 
@@ -105,6 +132,12 @@ def main():
     print "-"*70
     for i in raw_rules:
         print i
+    x = raw_rules[0]
+    print x
+    q = ABSTRACT_RULE(x[0], x[1], x[2], x[3], x[4], x[5], x[6])
+    print q.subnet_to_interval(x[0])
+
+
 
 __name__ == '__main__' and main()
 
@@ -112,6 +145,7 @@ __name__ == '__main__' and main()
 # --------------------- TESTS ----------------------------------------------
 import pytest
 skip = pytest.mark.skipif
+
 @skip
 def test_remove_negators():
     x = PARSER('rules') 
