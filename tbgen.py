@@ -3,6 +3,26 @@ from pdb import set_trace
 
 from interval import (Interval, IntervalList)
 
+class Action(object):
+    
+    def __init__(self, action_id):
+        self.action_id = action_id
+
+    def __eq__(self, other):
+        return self.action_id == other.action_id
+
+    def __ne__(self, other):
+        return not self == other
+
+PASS = Action(1)
+DROP = Action(2)
+
+
+# TODO
+# - implement normalize
+# - finish parser
+# - implement Rule subtraction
+
 class PARSER(object):
 
     def __init__(self, filename):
@@ -12,6 +32,15 @@ class PARSER(object):
         file_lines = self.read_file()
         splitted_rules = []
         for rule_id, line in enumerate(file_lines):
+            # XXX 
+            # first check negations, then inspect semantic parts of the line
+
+            # parts = line.split()
+            # negations = self.check_negations(parts)
+            # field_info = self.get_fields(parts)
+            # rule = RawRule(negations, field_info)
+
+
             l = self.get_fields(line)
             negs = self.neg_state(l)
             l = self.remove_negators(l)
@@ -52,6 +81,17 @@ class PARSER(object):
             fields[i][0]=fields[i][0][1:]
         return fields
 
+def subnet_to_interval(a, b, c, d, mask_bits):
+    """ Transforms a subnet of the form 'a.b.c.d/mask_bits'
+        to an Interval object.
+    """
+    base_addr = (a << 24) | (b << 16) | (c << 8) | d
+    zero_bits = 32 - mask_bits
+    # zero out rightmost bits according to mask
+    base_addr = (base_addr >> zero_bits) << zero_bits
+    high_addr = base_addr + (2 ** zero_bits) - 1
+    return Interval(base_addr, high_addr)
+
 class IP_CALC(object):
 
     def __init__(self, subnet):
@@ -89,16 +129,21 @@ class IP_CALC(object):
         return ".".join(map(lambda n: str(num>>n & 0xFF), [24,16,8,0]))
 
 
-class ABSTRACT_RULE(object):
+class AbstractRule(object):
 
-    def __init__(self, src_host, dst_host, src_port, dst_port,\
-                       protocol, neg_stat, rule_id):
+    def __init__(self, src_host, dst_host, src_port, dst_port,
+                       protocol, src_host_neg, dst_host_neg, src_port_neg,
+                       dst_port_neg, prot_neg, rule_id):
         self.src_host = src_host
         self.dst_host = dst_host
         self.src_port = src_port
         self.dst_port = dst_port
         self.protocol = protocol
-        self.neg_stat = neg_stat
+        self.src_host_neg = src_host_neg
+        self.dst_host_neg = dst_host_neg
+        self.src_port_neg = src_port_neg
+        self.dst_port_neg = dst_port_neg
+        self.prot_neg     = prot_neg
         self.rule_id = rule_id
 
     def create(self):
@@ -126,8 +171,42 @@ class ABSTRACT_RULE(object):
         a, b = x.get_subnet_minmax()
         return Interval(a, b)
 
+    def normalize(self):
+        """ Returns a list of normalized Rule objects.
+        """
+
+        
+
+
+class Rule(object):
+    """ Represents a normalized firewall rule, i.e. there are no more negated
+        fields.
+    """
+    
+    def __init__(self, src_net, dst_net, src_ports, dst_ports, prots, rule_id,
+            action):
+        self.src_net = src_net
+        self.dst_net = dst_net
+        self.src_ports = src_ports
+        self.dst_ports = dst_ports
+        self.prots = prots
+        self.rule_id = rule_id
+        self.action = action
+
+    def __eq__(self, other):
+        return  self.src_net == other.src_net\
+            and self.dst_net == other.dst_net\
+            and self.src_ports == other.src_ports\
+            and self.dst_ports == other.dst_ports\
+            and self.prots == other.prots\
+            and self.rule_id == other.rule_id\
+            and self.action == other.action
+
+    def __ne__(self, other):
+        return not self == other
+
 class NORMALIZER(object):
-    # Normalizes ABSTRACT_RULE
+    # Normalizes AbstractRule
     def __init__(self, abstract_rule):
         self.src_host, self.dst_host, self.src_port, self.dst_port,\
         self.protocol, self.neg_stat, self.rule_id,\
@@ -172,12 +251,12 @@ def main():
     print "-"*70
     for x in raw_rules:
         print x
-        q = ABSTRACT_RULE(x[0], x[1], x[2], x[3], x[4], x[5], x[6])
+        q = AbstractRule(x[0], x[1], x[2], x[3], x[4], x[5], x[6])
         print q.create()
 
     print "-"*70
     x = raw_rules[0]
-    q = ABSTRACT_RULE(x[0], x[1], x[2], x[3], x[4], x[5], x[6])
+    q = AbstractRule(x[0], x[1], x[2], x[3], x[4], x[5], x[6])
     print q.create() 
     n = NORMALIZER(q.create())
 
@@ -230,3 +309,37 @@ def test_get_subnet_minmax():
     assert a == 0 and b == 2**32 - 1 
 
 
+def test_subnet_to_interval():
+    # check subnet '1.2.3.4/5'
+    assert subnet_to_interval(1, 2, 3, 4, 5) == Interval(0, 134217727)
+    # check subnet '5.6.7.8/0'
+    assert subnet_to_interval(5, 6, 7, 8, 0) == Interval(0, 2 ** 32 - 1)
+    assert subnet_to_interval(24, 102, 18, 97, 17) == Interval(409337856,
+            409370621)
+
+
+class TestAbstractRule(object):
+
+    def test_normalize(self):
+        r1 = AbstractRule(Interval(1, 2), Interval(3, 4),
+                          Interval(5, 6), Interval(7, 8),
+                          Interval(9, 9), False, True, False,
+                          True, False, 1000)
+        rules = r1.normalize()
+        assert len(rules) == 4
+        assert rules[0] == ...
+        assert rules[1] == ...
+        ...
+        
+
+class TestRule(object):
+
+    def test_eq(self):
+        i1 = Interval(1, 2)
+        i2 = Interval(3, 4)
+        i3 = Interval(5, 6)
+        i4 = Interval(7, 8)
+        i5 = Interval(9, 10)
+        r1 = Rule(i1, i2, i3, i4, i5, 1000, PASS)
+        assert Rule(i1, i2, i3, i4, i5, 1000, PASS) == r1
+        assert r1 != Rule(i1, i1, i1, i1, i1, 1000, DROP)
