@@ -32,17 +32,15 @@ class Parser(object):
         file_lines = self.read_file()
         rules = []
         for rule_id, line in enumerate(file_lines):
-            parts = line[1:].split()
+            parts = line.split()
             args = self.get_fields(line) + self.check_negs(parts) + list(str(rule_id))
             rule = RawRule(*args)
             rules.append(rule)
         return rules
 
     def check_negs(self, parts):
-#         set_trace()
-        f = (0, 1, 2, 5, 8)   # Index-Set of negatable fields
         res = []
-        for i in f:
+        for i in (0, 1, 2, 5, 8):   # Index-Set of negatable fields
             if parts[i][0] == '!':
                 res.append(True)
             else:
@@ -51,57 +49,37 @@ class Parser(object):
 
     def get_fields(self, rule_line):
         fields = rule_line.split()
-        src_host = fields[0][1:].split('/')
+        src_host = fields[0].split('/')
         dst_host = fields[1].split('/')
         src_port = [fields[2], fields[4]]
         dst_port = [fields[5], fields[7]]
         protocol = fields[8].split('/')
-#         TODO: rule_action
-        return [src_host, dst_host, src_port, dst_port, protocol]
+        action = fields[9]
+        return [src_host, dst_host, src_port, dst_port, protocol, action]
                
     def read_file(self):
         with open(self.filename) as f:
             lines = f.readlines()
         return lines
 
- 
-def subnet_to_interval(a, b, c, d, mask_bits):
-    """ Transforms a subnet of the form 'a.b.c.d/mask_bits'
-        to an Interval object.
-    """
-    base_addr = (a << 24) | (b << 16) | (c << 8) | d
-    zero_bits = 32 - mask_bits
-    # zero out rightmost bits according to mask
-    base_addr = (base_addr >> zero_bits) << zero_bits
-    high_addr = base_addr + (2 ** zero_bits) - 1
-    return Interval(base_addr, high_addr)
-
 
 class RawRule(object):
 
     def __init__(self, src_host, dst_host, src_port, dst_port, protocol,\
-                 src_host_neg, dst_host_neg, src_port_neg, dst_port_neg,\
-                 prot_neg, rule_id):
+                action, src_host_neg, dst_host_neg, src_port_neg,\
+                dst_port_neg, prot_neg, rule_id):
         self.src_host = src_host
         self.dst_host = dst_host
         self.src_port = src_port
         self.dst_port = dst_port
         self.protocol = protocol
+        self.action = action
         self.src_host_neg = src_host_neg
         self.dst_host_neg = dst_host_neg
         self.src_port_neg = src_port_neg
         self.dst_port_neg = dst_port_neg
         self.prot_neg     = prot_neg
         self.rule_id = rule_id
-
-    def create(self):
-        return [self.subnet_to_interval(self.src_host),\
-                self.subnet_to_interval(self.dst_host),\
-                self.port_to_interval(self.src_port),\
-                self.port_to_interval(self.dst_port),\
-                self.protocol_to_interval(),\
-                self.neg_stat,\
-                self.rule_id]
 
     def protocol_to_interval(self):
         protocol =  map(lambda x: int(x, 0), self.protocol)
@@ -114,21 +92,36 @@ class RawRule(object):
         return Interval(a, b)
 
     def subnet_to_interval(self, field):
+        """ Transforms a subnet of the form 'a.b.c.d/mask_bits'
+            to an Interval object.
+        """
         subnet, mask = field
-        x = IP_CALC(subnet + '/' + mask)
-        a, b = x.get_subnet_minmax()
-        return Interval(a, b)
+        mask_bits = int(mask)
+        mask_bits = int(mask)
+        a, b, c, d = map(int, subnet[1:].split('.'))
+        base_addr = (a << 24) | (b << 16) | (c << 8) | d
+        zero_bits = 32 - mask_bits
+        # zero out rightmost bits according to mask
+        base_addr = (base_addr >> zero_bits) << zero_bits
+        high_addr = base_addr + (2 ** zero_bits) - 1
+        return Interval(base_addr, high_addr)
 
     def normalize(self):
         """ Returns a list of normalized Rule objects.
         """
+        return Rule(self.subnet_to_interval(self.src_host),\
+                    self.subnet_to_interval(self.dst_host),\
+                    self.port_to_interval(self.src_port),\
+                    self.port_to_interval(self.dst_port),\
+                    self.protocol_to_interval(),\
+                    self.action, self.rule_id)
 
     def __str__(self):
-        return "RawRule(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"\
+        return "RawRule:  %s  %s  %s  %s  %s  (%i %i %i %i %i)  %s  %s"\
                 % (self.src_host, self.dst_host, self.src_port, self.dst_port,\
                    self.protocol, self.src_host_neg, self.dst_host_neg,\
                    self.src_port_neg, self.dst_port_neg, self.prot_neg,\
-                   self.rule_id)
+                   self.action, self.rule_id)
 
     def __repr__(self):
         return str(self)
@@ -139,15 +132,15 @@ class Rule(object):
         fields.
     """
     
-    def __init__(self, src_net, dst_net, src_ports, dst_ports, prots, rule_id,
-            action):
+    def __init__(self, src_net, dst_net, src_ports, dst_ports, prots,\
+                       action, rule_id):
         self.src_net = src_net
         self.dst_net = dst_net
         self.src_ports = src_ports
         self.dst_ports = dst_ports
         self.prots = prots
-        self.rule_id = rule_id
         self.action = action
+        self.rule_id = rule_id
 
     def __eq__(self, other):
         return  self.src_net == other.src_net\
@@ -160,6 +153,13 @@ class Rule(object):
 
     def __ne__(self, other):
         return not self == other
+
+    def __str__(self):
+        return "Rule:  %s %s %s %s %s %s %s" % (self.src_net, self.dst_net,\
+               self.src_ports, self.dst_ports, self.prots, self.action, self.rule_id)
+
+    def __repr__(self):
+        return str(self)
 
 class NORMALIZER(object):
 
@@ -207,17 +207,8 @@ def main():
     print "-"*70
     for x in raw_rules:
         print x
-#         q = RawRule(x[0], x[1], x[2], x[3], x[4], x[5], x[6])
-#         print q.create()
-# 
-#     print "-"*70
-#     x = raw_rules[0]
-#     q = RawRule(x[0], x[1], x[2], x[3], x[4], x[5], x[6])
-#     print q.create() 
-#     n = NORMALIZER(q.create())
-# 
-#     print "Norm : ", n.run_for_one(2)
-# 
+        print x.normalize()
+ 
 __name__ == '__main__' and main()
 
 
