@@ -32,6 +32,9 @@ class Parser(object):
         file_lines = self.read_file()
         splitted_rules = []
         for rule_id, line in enumerate(file_lines):
+            parts = line[1:].split()
+            negations = self.check_negs(parts)
+
             # XXX 
             # first check negations, then inspect semantic parts of the line
 
@@ -40,13 +43,23 @@ class Parser(object):
             # field_info = self.get_fields(parts)
             # rule = RawRule(negations, field_info)
 
-
             l = self.get_fields(line)
             negs = self.neg_state(l)
             l = self.remove_negators(l)
             l.extend([negs, rule_id + 1])
             splitted_rules.append(l)
         return splitted_rules
+
+    def check_negs(self, parts):
+#         set_trace()
+        f = (0, 1, 2, 5, 8)   # Index-Set of negatable fields
+        res = []
+        for i in f:
+            if parts[i][0] == '!':
+                res.append(True)
+            else:
+                res.append(False)
+        return res
 
     def get_fields(self, rule_line):
         fields = rule_line.split()
@@ -203,7 +216,7 @@ class NORMALIZER(object):
 # ------------------------ MAIN ---------------------------------------------
 
 def main():
-#     if len(argv)>=2:
+#     if len(argv)>=2:;U
 #         filename = argv[1]
 #     else:
 #         exit('Usage: %s <Firewall-Rule-Set-File>' % argv[0])
@@ -211,57 +224,19 @@ def main():
     a = Parser(filename)
     raw_rules = a.parse()
     print "-"*70
-    for x in raw_rules:
-        print x
-        q = AbstractRule(x[0], x[1], x[2], x[3], x[4], x[5], x[6])
-        print q.create()
-
-    print "-"*70
-    x = raw_rules[0]
-    q = AbstractRule(x[0], x[1], x[2], x[3], x[4], x[5], x[6])
-    print q.create() 
-    n = NORMALIZER(q.create())
-
-    print "Norm : ", n.run_for_one(2)
-
+#     for x in raw_rules:
+#         print x
+#         q = AbstractRule(x[0], x[1], x[2], x[3], x[4], x[5], x[6])
+#         print q.create()
+# 
+#     print "-"*70
+#     x = raw_rules[0]
+#     q = AbstractRule(x[0], x[1], x[2], x[3], x[4], x[5], x[6])
+#     print q.create() 
+#     n = NORMALIZER(q.create())
+# 
+#     print "Norm : ", n.run_for_one(2)
+# 
 __name__ == '__main__' and main()
 
 
-# --------------------- TESTS ----------------------------------------------
-import pytest
-skip = pytest.mark.skipif
-
-
-def test_subnet_to_interval():
-    # check subnet '1.2.3.4/5'
-    assert subnet_to_interval(1, 2, 3, 4, 5) == Interval(0, 134217727)
-    # check subnet '5.6.7.8/0'
-    assert subnet_to_interval(5, 6, 7, 8, 0) == Interval(0, 2 ** 32 - 1)
-    assert subnet_to_interval(24, 102, 18, 97, 17) == Interval(409337856,
-            409370623)
-
-
-class TestAbstractRule(object):
-
-    def test_normalize(self):
-        r1 = AbstractRule(Interval(1, 2), Interval(3, 4),
-                          Interval(5, 6), Interval(7, 8),
-                          Interval(9, 9), False, True, False,
-                          True, False, 1000)
-        rules = r1.normalize()
-        assert len(rules) == 4
-#         assert rules[0] == ...
-#         assert rules[1] == ...
-#         ...
-        
-class TestRule(object):
-
-    def test_eq(self):
-        i1 = Interval(1, 2)
-        i2 = Interval(3, 4)
-        i3 = Interval(5, 6)
-        i4 = Interval(7, 8)
-        i5 = Interval(9, 10)
-        r1 = Rule(i1, i2, i3, i4, i5, 1000, PASS)
-        assert Rule(i1, i2, i3, i4, i5, 1000, PASS) == r1
-        assert r1 != Rule(i1, i1, i1, i1, i1, 1000, DROP)
