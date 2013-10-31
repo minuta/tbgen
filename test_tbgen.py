@@ -5,17 +5,22 @@ skip = pytest.mark.skipif
 
 class TestParser():
 
+
+    p = Parser('test_rules.txt')
     def test_check_negs(self):
-        p = Parser('test_rules.txt')
-        assert p.check_negs(['!192.151.11.17/32', '15.0.120.4/32',\
+
+        assert self.p.check_negs(['!192.151.11.17/32', '15.0.120.4/32',\
                            '!10', ':', '655', '1221', ':', '1221',\
                            '0x06/0xff']) == [True, False, True, False, False]
-        assert p.check_negs(['192.151.11.17/32', '15.0.120.4/32',\
+        assert self.p.check_negs(['192.151.11.17/32', '15.0.120.4/32',\
                            '10', ':', '655', '1221', ':', '1221',\
                            '0x06/0xff']) == [False, False, False, False, False]
-        assert p.check_negs(['!192.151.11.17/32', '!15.0.120.4/32',\
+        assert self.p.check_negs(['!192.151.11.17/32', '!15.0.120.4/32',\
                            '!10', ':', '655', '!1221', ':', '1221',\
                            '!0x06/0xff']) == [True, True, True, True, True]
+
+    def parse(self):
+        assert self.p.parse() 
 
 
 @skip
@@ -28,10 +33,10 @@ def test_subnet_to_interval():
             409370623)
 
 @skip
-class TestAbstractRule(object):
+class TestRawRule(object):
 
     def test_normalize(self):
-        r1 = AbstractRule(Interval(1, 2), Interval(3, 4),
+        r1 = RawRule(Interval(1, 2), Interval(3, 4),
                           Interval(5, 6), Interval(7, 8),
                           Interval(9, 9), False, True, False,
                           True, False, 1000)

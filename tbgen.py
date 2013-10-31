@@ -25,30 +25,18 @@ DROP = Action(2)
 
 class Parser(object):
 
-    def __init__(self, filename):
+    def __init__(self, filename, ):
         self.filename = filename
 
     def parse(self):
         file_lines = self.read_file()
-        splitted_rules = []
+        rules = []
         for rule_id, line in enumerate(file_lines):
             parts = line[1:].split()
-            negations = self.check_negs(parts)
-
-            # XXX 
-            # first check negations, then inspect semantic parts of the line
-
-            # parts = line.split()
-            # negations = self.check_negations(parts)
-            # field_info = self.get_fields(parts)
-            # rule = RawRule(negations, field_info)
-
-            l = self.get_fields(line)
-            negs = self.neg_state(l)
-            l = self.remove_negators(l)
-            l.extend([negs, rule_id + 1])
-            splitted_rules.append(l)
-        return splitted_rules
+            args = self.get_fields(line) + self.check_negs(parts) + list(str(rule_id))
+            rule = RawRule(*args)
+            rules.append(rule)
+        return rules
 
     def check_negs(self, parts):
 #         set_trace()
@@ -76,24 +64,7 @@ class Parser(object):
             lines = f.readlines()
         return lines
 
-    def is_negated(self, field):
-        test_obj = field[0]
-        if len(field)!=1:
-            test_obj = field[0][0]
-        if test_obj == '!':
-            return True
-        return False
-
-    def neg_state(self, rule_fields):
-        return [i for i, field in enumerate(rule_fields) \
-                if self.is_negated(field)]
-
-    def remove_negators(self, fields):
-        neg_status = self.neg_state(fields)
-        for i in neg_status:
-            fields[i][0]=fields[i][0][1:]
-        return fields
-
+ 
 def subnet_to_interval(a, b, c, d, mask_bits):
     """ Transforms a subnet of the form 'a.b.c.d/mask_bits'
         to an Interval object.
@@ -106,7 +77,7 @@ def subnet_to_interval(a, b, c, d, mask_bits):
     return Interval(base_addr, high_addr)
 
 
-class AbstractRule(object):
+class RawRule(object):
 
     def __init__(self, src_host, dst_host, src_port, dst_port, protocol,\
                  src_host_neg, dst_host_neg, src_port_neg, dst_port_neg,\
@@ -151,6 +122,16 @@ class AbstractRule(object):
     def normalize(self):
         """ Returns a list of normalized Rule objects.
         """
+
+    def __str__(self):
+        return "RawRule(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"\
+                % (self.src_host, self.dst_host, self.src_port, self.dst_port,\
+                   self.protocol, self.src_host_neg, self.dst_host_neg,\
+                   self.src_port_neg, self.dst_port_neg, self.prot_neg,\
+                   self.rule_id)
+
+    def __repr__(self):
+        return str(self)
 
 
 class Rule(object):
@@ -224,14 +205,14 @@ def main():
     a = Parser(filename)
     raw_rules = a.parse()
     print "-"*70
-#     for x in raw_rules:
-#         print x
-#         q = AbstractRule(x[0], x[1], x[2], x[3], x[4], x[5], x[6])
+    for x in raw_rules:
+        print x
+#         q = RawRule(x[0], x[1], x[2], x[3], x[4], x[5], x[6])
 #         print q.create()
 # 
 #     print "-"*70
 #     x = raw_rules[0]
-#     q = AbstractRule(x[0], x[1], x[2], x[3], x[4], x[5], x[6])
+#     q = RawRule(x[0], x[1], x[2], x[3], x[4], x[5], x[6])
 #     print q.create() 
 #     n = NORMALIZER(q.create())
 # 
