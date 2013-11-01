@@ -42,8 +42,13 @@ class TestParser():
                                             ['0x06', '0xff'],\
                                              'DROP' ]
 
+    def test_read_file(self):
+        fname = 'test_rules.txt'
+        s1 = '!192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 0x06/0xff DROP\n'
+        s2 = '192.151.11.17/0 15.0.120.4/24 1 : 100 1221 : 1221 0x06/0xff PASS\n'
 
-
+        assert self.p.read_file() == [s1, s2]
+        
 class TestRawRule(object):
 
     r = RawRule('', '', '', '', '', '', '', '', '', '', '', '')
