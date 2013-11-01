@@ -51,7 +51,15 @@ class TestParser():
         
 class TestRawRule(object):
 
-    r = RawRule('', '', '', '', '', '', '', '', '', '', '', '')
+#     r = RawRule('', '', '', '', '', '', '', '', '', '', '', '')
+    r = RawRule(['!192.151.11.17', '32'], ['15.0.120.4', '32'],\
+                     ['!10', '655'], ['1221', '1221'], ['0x06', '0xff'],\
+                      'DROP', 1, 0, 1, 0, 0, '0')
+
+    def test_protocol_to_interval(self):
+        assert self.r.protocol_to_interval() == Interval(6, 6)
+
+
     def test_subnet_to_interval(self):
         # check subnet '1.2.3.4/5'
         f1 = ['1.2.3.4', '5']
