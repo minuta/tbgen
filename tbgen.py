@@ -126,8 +126,31 @@ class RawRule(object):
                    self.action, self.rule_id)
 
     def __repr__(self):
+#         return "RawRule:  %s  %s  %s  %s  %s  (%i %i %i %i %i)  %s  %s"\
+#                 % (self.src_host, self.dst_host, self.src_port, self.dst_port,\
+#                    self.protocol, self.src_host_neg, self.dst_host_neg,\
+#                    self.src_port_neg, self.dst_port_neg, self.prot_neg,\
+#                    self.action, self.rule_id)
         return str(self)
 
+    def __eq__(self, other):
+#         if not isinstance(other, RawRule):
+#             return False
+        return self.src_host == other.src_host and\
+        self.dst_host == other.dst_host and\
+        self.src_port == other.src_port and\
+        self.dst_port == other.dst_port and\
+        self.protocol == other.protocol and\
+        self.action == other.action and\
+        self.src_host_neg == other.src_host_neg and\
+        self.dst_host_neg == other.dst_host_neg and\
+        self.src_port_neg == other.src_port_neg and\
+        self.dst_port_neg == other.dst_port_neg and\
+        self.prot_neg     == other.prot_neg and\
+        self.rule_id == other.rule_id 
+
+#     def __ne__(self, other):
+#         return not self == other
 
 class Rule(object):
     """ Represents a normalized firewall rule, i.e. there are no more negated
@@ -176,12 +199,8 @@ def main():
     print "-"*70
     for x in raw_rules:
         print x
-        print x.normalize(), '\n'
     
-#     r = raw_rules[0]
-#     f1 = ('!1.2.3.4', '5')
-#     print assert r.subnet_to_interval(f1) == Interval(0, 134217727)
-#  
+
 __name__ == '__main__' and main()
 
 
