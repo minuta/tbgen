@@ -9,6 +9,18 @@ class TestParser():
 
     p = Parser('test_rules.txt')
 
+    def test_parse(self):
+
+        r1 = RawRule(['!192.151.11.17', '32'], ['15.0.120.4', '32'],\
+                     ['!10', '655'], ['1221', '1221'], ['0x06', '0xff'],\
+                      'DROP', 1, 0, 1, 0, 0, '0')
+        r2 = RawRule(['192.151.11.17', '0'], ['15.0.120.4', '24'],\
+                     ['1', '100'], ['1221', '1221'], ['0x06', '0xff'],\
+                      'PASS', 0, 0, 0, 0, 0, '1')
+
+        assert self.p.parse() == [r1, r2]
+
+
     def test_check_negs(self):
 
         assert self.p.check_negs(['!192.151.11.17/32', '15.0.120.4/32',\
@@ -20,6 +32,16 @@ class TestParser():
         assert self.p.check_negs(['!192.151.11.17/32', '!15.0.120.4/32',\
                            '!10', ':', '655', '!1221', ':', '1221',\
                            '!0x06/0xff']) == [True, True, True, True, True]
+
+    def test_get_fields(self):
+        rule = '!192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 0x06/0xff DROP'
+        assert self.p.get_fields(rule) == [ ['!192.151.11.17', '32'], \
+                                            ['15.0.120.4', '32'],\
+                                            ['!10', '655'],\
+                                            ['1221', '1221'],\
+                                            ['0x06', '0xff'],\
+                                             'DROP' ]
+
 
 
 class TestRawRule(object):
@@ -37,6 +59,7 @@ class TestRawRule(object):
         f3 = ['24.102.18.97', '17']
         assert self.r.subnet_to_interval(f3) == Interval(409337856, 409370623)
 
+    @skip
     def test_normalize(self):
         action = 'PASS'
         r_id = 13
