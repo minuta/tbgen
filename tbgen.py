@@ -13,15 +13,29 @@ class Action(object):
 
     def __ne__(self, other):
         return not self == other
+PASS = 1
+DROP = 2
 
-PASS = Action(1)
-DROP = Action(2)
+
+MIN_ADDR = 0
+MAX_ADDR = int(2 ** 32 - 1)
+
+MIN_PORT = 0
+MAX_PORT = int(2 ** 16 - 1)
+
+MIN_PROT = 0
+MAX_PROT = int(2 ** 8 - 1)
+
 
 
 # TODO
 # - implement normalize
 # - finish parser
 # - implement Rule subtraction
+# - ONLY the parser does parsing!
+# - RawRule objecst shall be instantiated ONLY with Interval objects,
+#   NOT with plain strings
+
 
 class Parser(object):
 
@@ -117,6 +131,21 @@ class RawRule(object):
                     self.port_to_interval(self.dst_port),\
                     self.protocol_to_interval(),\
                     self.action, self.rule_id)
+        rules = []
+        src_nets = self.src_host.negate(MIN_ADDR, MAX_ADDR)
+        dst_nets = self.dst_host.negate(MIN_ADDR, MAX_ADDR)
+        src_ports = self.src_port.negate(MIN_PORT, MAX_PORT)
+        dst_ports = self.dst_port.negate(MIN_PORT, MAX_PORT)
+        prots = self.protocol.negate(MIN_PROT, MAX_PROT)
+        for src_net in src_nets:
+            for dst_net in dst_nets:
+                for src_port in src_ports:
+                    for dst_port in dst_ports:
+                        for prot in prots:
+                            rule = Rule(src_net, dst_net, src_port, dst_port,
+                                    prot, self.action, self.rule_id)
+                            rules.append(rule)
+        return rules
 
     def __str__(self):
         return "RawRule:  %s  %s  %s  %s  %s  (%i %i %i %i %i)  %s  %s"\

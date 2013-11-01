@@ -1,4 +1,4 @@
-from tbgen import (Parser, RawRule)
+from tbgen import Parser, RawRule, PASS, DROP
 from interval import Interval
 
 import pytest
@@ -75,9 +75,8 @@ class TestRawRule(object):
         f3 = ['24.102.18.97', '17']
         assert self.r.subnet_to_interval(f3) == Interval(409337856, 409370623)
 
-    @skip
     def test_normalize(self):
-        action = 'PASS'
+        action = PASS
         r_id = 13
         m = 2 ** 32 - 1
         i1 = Interval(1, 2)
@@ -89,13 +88,18 @@ class TestRawRule(object):
                      False, True, False, True, False, r_id)
         rules = r1.normalize()
         assert len(rules) == 4
-
         assert rules[0] == Rule(i1, Interval(0, 2), i3, Interval(0, 6), i5, action, r_id)
         assert rules[1] == Rule(i1, Interval(0, 2), i3, Interval(9, m), i5, action, r_id)
         assert rules[2] == Rule(i1, Interval(5, m), i3, Interval(0, 6), i5, action, r_id)
         assert rules[3] == Rule(i1, Interval(5, m), i3, Interval(9, m), i5, action, r_id)
 
-        
+    def test_normalize_worst_case_num_rules(self):
+        raw_rule = RawRule(Interval(1, 2), Interval(3, 4), Interval(5, 6),
+                Interval(7, 8), Interval(9, 10), DROP, True, True, True, True,
+                True, 1)
+        normalized_rules = raw_rule.normalize()
+        assert len(normalized_rules) == 32
+
 @skip        
 class TestRule(object):
 
