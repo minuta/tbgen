@@ -126,11 +126,6 @@ class RawRule(object):
                    self.action, self.rule_id)
 
     def __repr__(self):
-#         return "RawRule:  %s  %s  %s  %s  %s  (%i %i %i %i %i)  %s  %s"\
-#                 % (self.src_host, self.dst_host, self.src_port, self.dst_port,\
-#                    self.protocol, self.src_host_neg, self.dst_host_neg,\
-#                    self.src_port_neg, self.dst_port_neg, self.prot_neg,\
-#                    self.action, self.rule_id)
         return str(self)
 
     def __eq__(self, other):
@@ -194,13 +189,14 @@ def main():
 #     else:
 #         exit('Usage: %s <Firewall-Rule-Set-File>' % argv[0])
     filename = 'test_rules.txt'
-    a = Parser(filename)
-    raw_rules = a.parse()
-    print "-"*70
-    for x in raw_rules:
-        print x
+    p = Parser(filename)
+    r =  p.parse()[0]
+    print r.dst_port
+    i1 =  r.port_to_interval(r.dst_port) 
+    i2 = Interval(1221, 1221)
     
-
+    print i1.a, i2.a
+    print isinstance(i1, Interval)
 __name__ == '__main__' and main()
 
 

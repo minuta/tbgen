@@ -59,6 +59,9 @@ class TestRawRule(object):
     def test_protocol_to_interval(self):
         assert self.r.protocol_to_interval() == Interval(6, 6)
 
+    @skip
+    def test_port_to_interval(self):
+        assert self.r.port_to_interval(self.r.dst_port) == Interval(1221, 1221)
 
     def test_subnet_to_interval(self):
         # check subnet '1.2.3.4/5'
