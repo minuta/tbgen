@@ -97,8 +97,10 @@ class RawRule(object):
         """
         subnet, mask = field
         mask_bits = int(mask)
-        mask_bits = int(mask)
-        a, b, c, d = map(int, subnet[1:].split('.'))
+        _subnet = subnet
+        if subnet[0] == '!':
+            _subnet = subnet[1:]
+        a, b, c, d = map(int, _subnet.split('.'))
         base_addr = (a << 24) | (b << 16) | (c << 8) | d
         zero_bits = 32 - mask_bits
         # zero out rightmost bits according to mask
@@ -109,7 +111,7 @@ class RawRule(object):
     def normalize(self):
         """ Returns a list of normalized Rule objects.
         """
-        return Rule(self.subnet_to_interval(self.src_host),\
+        r = Rule(self.subnet_to_interval(self.src_host),\
                     self.subnet_to_interval(self.dst_host),\
                     self.port_to_interval(self.src_port),\
                     self.port_to_interval(self.dst_port),\
@@ -161,39 +163,6 @@ class Rule(object):
     def __repr__(self):
         return str(self)
 
-class NORMALIZER(object):
-
-    def __init__(self, abstract_rule):
-        self.src_host, self.dst_host, self.src_port, self.dst_port,\
-        self.protocol, self.neg_stat, self.rule_id,\
-        = abstract_rule
-        self.rule = abstract_rule
-
-    def run_for_all(self):
-        if self.neg_stat == []:
-            return self.rule
-        return self.run_for_one(2) 
-
-    def run_for_one(self, neg_index):
-        set_trace()
-        max_n = self.get_max_border(neg_index)
-        _interval = self.rule[neg_index]
-        negated_intervals = _interval.negate(0, max_n)
-
-        new_rules = []
-        for i in negated_intervals:
-            r = self.rule[:]
-            r[neg_index]=i
-            new_rules.append(r)
-        return new_rules
-
-    def get_max_border(self, i):
-        if i in [0, 1]:
-            return 2**32 - 1
-        if i in [2, 3]:
-            return 2**16 - 1
-        if i == 4:
-            return 255
 # ------------------------ MAIN ---------------------------------------------
 
 def main():
@@ -207,8 +176,12 @@ def main():
     print "-"*70
     for x in raw_rules:
         print x
-        print x.normalize()
- 
+        print x.normalize(), '\n'
+    
+#     r = raw_rules[0]
+#     f1 = ('!1.2.3.4', '5')
+#     print assert r.subnet_to_interval(f1) == Interval(0, 134217727)
+#  
 __name__ == '__main__' and main()
 
 
