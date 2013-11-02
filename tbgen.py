@@ -1,3 +1,4 @@
+
 from sys import argv
 from pdb import set_trace
 
@@ -13,6 +14,8 @@ class Action(object):
 
     def __ne__(self, other):
         return not self == other
+
+# --------------------------------------------------------------
 PASS = 1
 DROP = 2
 
@@ -25,7 +28,7 @@ MAX_PORT = int(2 ** 16 - 1)
 
 MIN_PROT = 0
 MAX_PROT = int(2 ** 8 - 1)
-
+# --------------------------------------------------------------
 
 
 # TODO
@@ -53,16 +56,22 @@ class Parser(object):
         return rules
 
     def check_negs(self, parts):
+        """ Check for Field-Negators, remove them and return a boolean list of
+            negated and not negated fields
+        """
+#         set_trace()
         res = []
         for i in (0, 1, 2, 5, 8):   # Index-Set of negatable fields
             if parts[i][0] == '!':
                 res.append(True)
+                parts[i] = parts[i][1:]
             else:
                 res.append(False)
-        return res
+        return parts, res
 
     def get_fields(self, rule_line):
         fields = rule_line.split()
+#         set_trace()
         src_host = fields[0].split('/')
         dst_host = fields[1].split('/')
         src_port = [fields[2], fields[4]]
@@ -121,31 +130,31 @@ class RawRule(object):
         base_addr = (base_addr >> zero_bits) << zero_bits
         high_addr = base_addr + (2 ** zero_bits) - 1
         return Interval(base_addr, high_addr)
-
-    def normalize(self):
-        """ Returns a list of normalized Rule objects.
-        """
-        r = Rule(self.subnet_to_interval(self.src_host),\
-                    self.subnet_to_interval(self.dst_host),\
-                    self.port_to_interval(self.src_port),\
-                    self.port_to_interval(self.dst_port),\
-                    self.protocol_to_interval(),\
-                    self.action, self.rule_id)
-        rules = []
-        src_nets = self.src_host.negate(MIN_ADDR, MAX_ADDR)
-        dst_nets = self.dst_host.negate(MIN_ADDR, MAX_ADDR)
-        src_ports = self.src_port.negate(MIN_PORT, MAX_PORT)
-        dst_ports = self.dst_port.negate(MIN_PORT, MAX_PORT)
-        prots = self.protocol.negate(MIN_PROT, MAX_PROT)
-        for src_net in src_nets:
-            for dst_net in dst_nets:
-                for src_port in src_ports:
-                    for dst_port in dst_ports:
-                        for prot in prots:
-                            rule = Rule(src_net, dst_net, src_port, dst_port,
-                                    prot, self.action, self.rule_id)
-                            rules.append(rule)
-        return rules
+# 
+#     def normalize(self):
+#         """ Returns a list of normalized Rule objects.
+#         """
+#         r = Rule(self.subnet_to_interval(self.src_host),\
+#                     self.subnet_to_interval(self.dst_host),\
+#                     self.port_to_interval(self.src_port),\
+#                     self.port_to_interval(self.dst_port),\
+#                     self.protocol_to_interval(),\
+#                     self.action, self.rule_id)
+#         rules = []
+#         src_nets = self.src_host.negate(MIN_ADDR, MAX_ADDR)
+#         dst_nets = self.dst_host.negate(MIN_ADDR, MAX_ADDR)
+#         src_ports = self.src_port.negate(MIN_PORT, MAX_PORT)
+#         dst_ports = self.dst_port.negate(MIN_PORT, MAX_PORT)
+#         prots = self.protocol.negate(MIN_PROT, MAX_PROT)
+#         for src_net in src_nets:
+#             for dst_net in dst_nets:
+#                 for src_port in src_ports:
+#                     for dst_port in dst_ports:
+#                         for prot in prots:
+#                             rule = Rule(src_net, dst_net, src_port, dst_port,
+#                                     prot, self.action, self.rule_id)
+#                             rules.append(rule)
+#         return rules
 
     def __str__(self):
         return "RawRule:  %s  %s  %s  %s  %s  (%i %i %i %i %i)  %s  %s"\
@@ -220,12 +229,8 @@ def main():
     filename = 'test_rules.txt'
     p = Parser(filename)
     r =  p.parse()[0]
-    print r.dst_port
-    i1 =  r.port_to_interval(r.dst_port) 
-    i2 = Interval(1221, 1221)
-    
-    print i1.a, i2.a
-    print isinstance(i1, Interval)
+    print r
+
 __name__ == '__main__' and main()
 
 

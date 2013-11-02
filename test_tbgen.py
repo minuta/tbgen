@@ -9,6 +9,59 @@ class TestParser():
 
     p = Parser('test_rules.txt')
 
+ 
+    def test_check_negs(self):
+        new_line, negs = self.p.check_negs( ['!192.151.11.17/32', '15.0.120.4/32',\
+                           '!10', ':', '655', '1221', ':', '1221',\
+                           '0x06/0xff'] )
+        assert new_line == ['192.151.11.17/32', '15.0.120.4/32',\
+                           '10', ':', '655', '1221', ':', '1221',\
+                           '0x06/0xff']
+        assert negs == [True, False, True, False, False]
+
+        new_line, negs = self.p.check_negs( ['192.151.11.17/32', '15.0.120.4/32',\
+                           '10', ':', '655', '1221', ':', '1221',\
+                           '0x06/0xff'] ) 
+        assert new_line == ['192.151.11.17/32', '15.0.120.4/32',\
+                           '10', ':', '655', '1221', ':', '1221',\
+                           '0x06/0xff'] 
+        assert negs == [False, False, False, False, False]
+
+        new_line, negs = self.p.check_negs( ['!192.151.11.17/32', '!15.0.120.4/32',\
+                           '!10', ':', '655', '!1221', ':', '1221',\
+                           '!0x06/0xff'] ) 
+        assert new_line == ['192.151.11.17/32', '15.0.120.4/32',\
+                           '10', ':', '655', '1221', ':', '1221',\
+                           '0x06/0xff']
+        assert negs == [True, True, True, True, True]
+
+
+    @skip
+    def test_get_fields(self):
+        rule = '!192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 0x06/0xff DROP'
+        assert self.p.get_fields(rule) == [ [192, 151, 11, 17, 32],
+                                            [15, 0, 120, 4, 32],
+                                            [10, 655],
+                                            [1221, 1221],
+                                            [6, 255],
+                                            [DROP] ]
+
+
+#         assert self.p.get_fields(rule) == [ ['!192.151.11.17', '32'], \
+#                                             ['15.0.120.4', '32'],\
+#                                             ['!10', '655'],\
+#                                             ['1221', '1221'],\
+#                                             ['0x06', '0xff'],\
+#                                              'DROP' ]
+    @skip
+    def test_read_file(self):
+        fname = 'test_rules.txt'
+        s1 = '!192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 0x06/0xff DROP\n'
+        s2 = '192.151.11.17/0 15.0.120.4/24 1 : 100 1221 : 1221 0x06/0xff PASS\n'
+
+        assert self.p.read_file() == [s1, s2]
+
+    @skip
     def test_parse(self):
 
         r1 = RawRule(['!192.151.11.17', '32'], ['15.0.120.4', '32'],\
@@ -20,35 +73,8 @@ class TestParser():
 
         assert self.p.parse() == [r1, r2]
 
-
-    def test_check_negs(self):
-
-        assert self.p.check_negs(['!192.151.11.17/32', '15.0.120.4/32',\
-                           '!10', ':', '655', '1221', ':', '1221',\
-                           '0x06/0xff']) == [True, False, True, False, False]
-        assert self.p.check_negs(['192.151.11.17/32', '15.0.120.4/32',\
-                           '10', ':', '655', '1221', ':', '1221',\
-                           '0x06/0xff']) == [False, False, False, False, False]
-        assert self.p.check_negs(['!192.151.11.17/32', '!15.0.120.4/32',\
-                           '!10', ':', '655', '!1221', ':', '1221',\
-                           '!0x06/0xff']) == [True, True, True, True, True]
-
-    def test_get_fields(self):
-        rule = '!192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 0x06/0xff DROP'
-        assert self.p.get_fields(rule) == [ ['!192.151.11.17', '32'], \
-                                            ['15.0.120.4', '32'],\
-                                            ['!10', '655'],\
-                                            ['1221', '1221'],\
-                                            ['0x06', '0xff'],\
-                                             'DROP' ]
-
-    def test_read_file(self):
-        fname = 'test_rules.txt'
-        s1 = '!192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 0x06/0xff DROP\n'
-        s2 = '192.151.11.17/0 15.0.120.4/24 1 : 100 1221 : 1221 0x06/0xff PASS\n'
-
-        assert self.p.read_file() == [s1, s2]
-        
+       
+@skip
 class TestRawRule(object):
 
 #     r = RawRule('', '', '', '', '', '', '', '', '', '', '', '')
