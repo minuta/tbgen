@@ -36,23 +36,17 @@ class TestParser():
         assert negs == [True, True, True, True, True]
 
 
-    @skip
     def test_get_fields(self):
-        rule = '!192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 0x06/0xff DROP'
-        assert self.p.get_fields(rule) == [ [192, 151, 11, 17, 32],
+        rule = '192.151.11.17/32 15.0.120.4/32 10 : 655 1221 : 1221 0x06/0xff DROP'
+        parts = rule.split()
+        assert self.p.get_fields(parts) == [ [192, 151, 11, 17, 32],
                                             [15, 0, 120, 4, 32],
                                             [10, 655],
                                             [1221, 1221],
                                             [6, 255],
-                                            [DROP] ]
+                                            DROP ]
 
 
-#         assert self.p.get_fields(rule) == [ ['!192.151.11.17', '32'], \
-#                                             ['15.0.120.4', '32'],\
-#                                             ['!10', '655'],\
-#                                             ['1221', '1221'],\
-#                                             ['0x06', '0xff'],\
-#                                              'DROP' ]
     @skip
     def test_read_file(self):
         fname = 'test_rules.txt'

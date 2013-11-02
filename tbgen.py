@@ -15,7 +15,7 @@ class Action(object):
     def __ne__(self, other):
         return not self == other
 
-# --------------------------------------------------------------
+# -------------- CONSTANTS --------------------------------------
 PASS = 1
 DROP = 2
 
@@ -50,9 +50,10 @@ class Parser(object):
         rules = []
         for rule_id, line in enumerate(file_lines):
             parts = line.split()
-            args = self.get_fields(line) + self.check_negs(parts) + list(str(rule_id))
-            rule = RawRule(*args)
-            rules.append(rule)
+            no_negs_list, negs = self.check_negs(parts)
+
+            args = self.get_fields(parts) + negs + list(str(rule_id))
+            rules.append(RawRule(*args))
         return rules
 
     def check_negs(self, parts):
@@ -69,15 +70,27 @@ class Parser(object):
                 res.append(False)
         return parts, res
 
-    def get_fields(self, rule_line):
-        fields = rule_line.split()
+    def get_fields(self, fields):
+
 #         set_trace()
-        src_host = fields[0].split('/')
-        dst_host = fields[1].split('/')
-        src_port = [fields[2], fields[4]]
-        dst_port = [fields[5], fields[7]]
-        protocol = fields[8].split('/')
-        action = fields[9]
+
+        def split_subnet_str(field):
+            a = field.split('/')
+            return map(int, a[0].split('.')) + [int(a[1])]
+
+        src_host = split_subnet_str(fields[0])
+        dst_host = split_subnet_str(fields[1])
+        src_port = [int(fields[2]), int(fields[4])]
+        dst_port = [int(fields[5]), int(fields[7])]
+        protocol = [int(x, 0) for x in fields[8].split('/')]
+
+        _action = fields[9]
+        if _action == 'DROP':
+            action = DROP
+        elif _action == 'PASS':
+            action = PASS
+        else:
+            raise ValueError("%s is an unknown rule action!" % _action)
         return [src_host, dst_host, src_port, dst_port, protocol, action]
                
     def read_file(self):
