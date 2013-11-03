@@ -100,13 +100,7 @@ class RawRule(object):
     def __init__(self, src_host, dst_host, src_port, dst_port, protocol,\
                 action, src_host_neg, dst_host_neg, src_port_neg,\
                 dst_port_neg, prot_neg, rule_id):
-#         r = Rule(self.subnet_to_interval(self.src_host),\
-#                     self.subnet_to_interval(self.dst_host),\
-#                     self.port_to_interval(self.src_port),\
-#                     self.port_to_interval(self.dst_port),\
-#                     self.protocol_to_interval(),\
-#                     self.action, self.rule_id)
-#
+
         self.src_host = self.subnet_to_interval(src_host)
         self.dst_host = self.subnet_to_interval(dst_host)
         self.src_port = self.port_to_interval(src_port)
@@ -121,7 +115,6 @@ class RawRule(object):
         self.rule_id = rule_id
 
     def protocol_to_interval(self, protocol):
-#         protocol =  map(lambda x: int(x, 0), self.protocol)
         if protocol[1] == 0:
             return Interval(0, 255)
         return Interval(protocol[0], protocol[0])
@@ -134,45 +127,40 @@ class RawRule(object):
         """ Transforms a subnet of the form 'a.b.c.d/mask_bits'
             to an Interval object.
         """
-#         subnet, mask = field
-#         mask_bits = int(mask)
-#         _subnet = subnet
-#         if subnet[0] == '!':
-#             _subnet = subnet[1:]
-#         a, b, c, d = map(int, _subnet.split('.'))
         a, b, c, d, mask = field
-
         base_addr = (a << 24) | (b << 16) | (c << 8) | d
         zero_bits = 32 - mask
         # zero out rightmost bits according to mask
         base_addr = (base_addr >> zero_bits) << zero_bits
         high_addr = base_addr + (2 ** zero_bits) - 1
         return Interval(base_addr, high_addr)
-# 
-#     def normalize(self):
-#         """ Returns a list of normalized Rule objects.
-#         """
-#         r = Rule(self.subnet_to_interval(self.src_host),\
-#                     self.subnet_to_interval(self.dst_host),\
-#                     self.port_to_interval(self.src_port),\
-#                     self.port_to_interval(self.dst_port),\
-#                     self.protocol_to_interval(),\
-#                     self.action, self.rule_id)
-#         rules = []
-#         src_nets = self.src_host.negate(MIN_ADDR, MAX_ADDR)
-#         dst_nets = self.dst_host.negate(MIN_ADDR, MAX_ADDR)
-#         src_ports = self.src_port.negate(MIN_PORT, MAX_PORT)
-#         dst_ports = self.dst_port.negate(MIN_PORT, MAX_PORT)
-#         prots = self.protocol.negate(MIN_PROT, MAX_PROT)
-#         for src_net in src_nets:
-#             for dst_net in dst_nets:
-#                 for src_port in src_ports:
-#                     for dst_port in dst_ports:
-#                         for prot in prots:
-#                             rule = Rule(src_net, dst_net, src_port, dst_port,
-#                                     prot, self.action, self.rule_id)
-#                             rules.append(rule)
-#         return rules
+
+    def _negate(self, field, min_value, max_value, neg_state):
+        if neg_state == False:
+            return [field]
+        return field.negate(min_value, max_value)
+
+    def normalize(self):
+        """ Returns a list of normalized Rule objects.
+        """
+#         r = Rule(self.src_host, self.dst_host, self.src_port,\
+#                  self.dst_port, self.protocol, self.action, self.rule_id)
+        rules = []
+#         set_trace()
+        src_nets = self._negate(self.src_host, MIN_ADDR, MAX_ADDR, self.src_host_neg)
+        dst_nets = self._negate(self.dst_host, MIN_ADDR, MAX_ADDR, self.dst_host_neg)
+        src_ports = self._negate(self.src_port, MIN_PORT, MAX_PORT, self.src_port_neg)
+        dst_ports = self._negate(self.dst_port, MIN_PORT, MAX_PORT, self.dst_port_neg)
+        prots = self._negate(self.protocol, MIN_PROT, MAX_PROT, self.prot_neg)
+        for src_net in src_nets:
+            for dst_net in dst_nets:
+                for src_port in src_ports:
+                    for dst_port in dst_ports:
+                        for prot in prots:
+                            rule = Rule(src_net, dst_net, src_port, dst_port,
+                                    prot, self.action, self.rule_id)
+                            rules.append(rule)
+        return rules
 
     def __str__(self):
         s1 = "RawRule: sn%s dn%s sp%s dp%s prot%s"\
@@ -255,10 +243,17 @@ def main():
                      [10, 655], [1221, 1221], [6, 255],\
                       DROP, 1, 0, 1, 0, 0, 0)
 
-#     r2 == p.parse()[0]
+    def rawrule_attrs(rule):
+        print rule.src_host
+        print rule.dst_host
+        print rule.src_port
+        print rule.dst_port
+        print rule.protocol
 
-    assert  r1.dst_host == p1.dst_host
+#     rawrule_attrs(r1)
+    print r1.normalize()
+        
 
-__name__ == '__main__' and main()
+if __name__ == '__main__': main()
 
 

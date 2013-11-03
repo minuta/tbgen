@@ -96,7 +96,12 @@ class TestRawRule(object):
         f3 = [24, 102, 18, 97, 17]
         assert self.r.subnet_to_interval(f3) == Interval(409337856, 409370623)
 
-    @skip
+
+    def test_negate(self):
+        i = Interval(3, 5)
+        assert self.r._negate(i, 0, 10, False) == [i]
+        assert self.r._negate(i, 0, 10, True) == [Interval(0, 2), Interval(6, 10)]
+
     def test_normalize(self):
         action = PASS
         r_id = 13
@@ -104,11 +109,13 @@ class TestRawRule(object):
         i1 = Interval(1, 2)
         i3 = Interval(5, 6)
         i5 = Interval(9, 9)
+
         r1 = RawRule(i1, Interval(3, 4),\
                      i3, Interval(7, 8),
                      i5, action,\
                      False, True, False, True, False, r_id)
         rules = r1.normalize()
+
         assert len(rules) == 4
         assert rules[0] == Rule(i1, Interval(0, 2), i3, Interval(0, 6), i5, action, r_id)
         assert rules[1] == Rule(i1, Interval(0, 2), i3, Interval(9, m), i5, action, r_id)
