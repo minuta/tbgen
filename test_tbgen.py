@@ -81,9 +81,8 @@ class TestRawRule(object):
     def test_protocol_to_interval(self):
         assert self.r.protocol_to_interval([6, 255]) == Interval(6, 6)
 
-    @skip
     def test_port_to_interval(self):
-        assert self.r.port_to_interval(self.r.dst_port) == Interval(1221, 1221)
+        assert self.r.port_to_interval([1221, 1221]) == Interval(1221, 1221)
 
     @skip
     def test_subnet_to_interval(self):

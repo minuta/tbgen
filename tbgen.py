@@ -109,8 +109,8 @@ class RawRule(object):
 #
         self.src_host = src_host
         self.dst_host = dst_host
-        self.src_port = src_port
-        self.dst_port = dst_port
+        self.src_port = self.port_to_interval(src_port)
+        self.dst_port = self.port_to_interval(dst_port)
         self.protocol = self.protocol_to_interval(protocol)
         self.action = action
         self.src_host_neg = src_host_neg
