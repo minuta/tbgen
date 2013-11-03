@@ -84,17 +84,16 @@ class TestRawRule(object):
     def test_port_to_interval(self):
         assert self.r.port_to_interval([1221, 1221]) == Interval(1221, 1221)
 
-    @skip
     def test_subnet_to_interval(self):
         # check subnet '1.2.3.4/5'
-        f1 = ['1.2.3.4', '5']
+        f1 = [1, 2, 3, 4, 5]
         assert self.r.subnet_to_interval(f1) == Interval(0, 134217727)
         # check subnet '5.6.7.8/0'
 
-        f2 = ['5.6.7.8', '0']
+        f2 = [5, 6, 7, 8, 0]
         assert self.r.subnet_to_interval(f2) == Interval(0, 2 ** 32 - 1)
         
-        f3 = ['24.102.18.97', '17']
+        f3 = [24, 102, 18, 97, 17]
         assert self.r.subnet_to_interval(f3) == Interval(409337856, 409370623)
 
     @skip

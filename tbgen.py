@@ -107,8 +107,8 @@ class RawRule(object):
 #                     self.protocol_to_interval(),\
 #                     self.action, self.rule_id)
 #
-        self.src_host = src_host
-        self.dst_host = dst_host
+        self.src_host = self.subnet_to_interval(src_host)
+        self.dst_host = self.subnet_to_interval(dst_host)
         self.src_port = self.port_to_interval(src_port)
         self.dst_port = self.port_to_interval(dst_port)
         self.protocol = self.protocol_to_interval(protocol)
@@ -134,14 +134,16 @@ class RawRule(object):
         """ Transforms a subnet of the form 'a.b.c.d/mask_bits'
             to an Interval object.
         """
-        subnet, mask = field
-        mask_bits = int(mask)
-        _subnet = subnet
-        if subnet[0] == '!':
-            _subnet = subnet[1:]
-        a, b, c, d = map(int, _subnet.split('.'))
+#         subnet, mask = field
+#         mask_bits = int(mask)
+#         _subnet = subnet
+#         if subnet[0] == '!':
+#             _subnet = subnet[1:]
+#         a, b, c, d = map(int, _subnet.split('.'))
+        a, b, c, d, mask = field
+
         base_addr = (a << 24) | (b << 16) | (c << 8) | d
-        zero_bits = 32 - mask_bits
+        zero_bits = 32 - mask
         # zero out rightmost bits according to mask
         base_addr = (base_addr >> zero_bits) << zero_bits
         high_addr = base_addr + (2 ** zero_bits) - 1
