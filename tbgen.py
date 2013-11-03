@@ -4,16 +4,16 @@ from pdb import set_trace
 
 from interval import (Interval, IntervalList)
 
-class Action(object):
-    
-    def __init__(self, action_id):
-        self.action_id = action_id
-
-    def __eq__(self, other):
-        return self.action_id == other.action_id
-
-    def __ne__(self, other):
-        return not self == other
+# class Action(object):
+#     
+#     def __init__(self, action_id):
+#         self.action_id = action_id
+# 
+#     def __eq__(self, other):
+#         return self.action_id == other.action_id
+# 
+#     def __ne__(self, other):
+#         return not self == other
 
 # -------------- CONSTANTS --------------------------------------
 PASS = 1
@@ -60,7 +60,6 @@ class Parser(object):
         """ Check for Field-Negators, remove them and return a boolean list of
             negated and not negated fields
         """
-#         set_trace()
         res = []
         for i in (0, 1, 2, 5, 8):   # Index-Set of negatable fields
             if parts[i][0] == '!':
@@ -71,9 +70,6 @@ class Parser(object):
         return parts, res
 
     def get_fields(self, fields):
-
-#         set_trace()
-
         def split_subnet_str(field):
             a = field.split('/')
             return map(int, a[0].split('.')) + [int(a[1])]
@@ -170,11 +166,14 @@ class RawRule(object):
 #         return rules
 
     def __str__(self):
-        return "RawRule:  %s  %s  %s  %s  %s  (%i %i %i %i %i)  %s  %s"\
-                % (self.src_host, self.dst_host, self.src_port, self.dst_port,\
-                   self.protocol, self.src_host_neg, self.dst_host_neg,\
-                   self.src_port_neg, self.dst_port_neg, self.prot_neg,\
-                   self.action, self.rule_id)
+        s1 = "RawRule: sn%s dn%s sp%s dp%s prot%s"\
+        % (self.src_host, self.dst_host, self.src_port, self.dst_port,\
+                   self.protocol) 
+        s2 = "id(%s) action(%s) neg(%i %i %i %i %i)"\
+               % (self.rule_id, self.action, self.src_host_neg,\
+                   self.dst_host_neg, self.src_port_neg, self.dst_port_neg,\
+                   self.prot_neg)
+        return s1 + s2
 
     def __repr__(self):
         return str(self)
@@ -241,8 +240,15 @@ def main():
 #         exit('Usage: %s <Firewall-Rule-Set-File>' % argv[0])
     filename = 'test_rules.txt'
     p = Parser(filename)
-    r =  p.parse()[0]
-    print r
+    p1, p2 = p.parse()
+
+    r1 = RawRule([192, 151, 11, 17, 32], [15, 0, 120, 4, 32],\
+                     [10, 655], [1221, 1221], [6, 255],\
+                      DROP, 1, 0, 1, 0, 0, 0)
+
+#     r2 == p.parse()[0]
+
+    assert  r1.dst_host == p1.dst_host
 
 __name__ == '__main__' and main()
 

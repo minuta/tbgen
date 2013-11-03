@@ -47,35 +47,38 @@ class TestParser():
                                             DROP ]
 
 
-    @skip
+
     def test_read_file(self):
+
         fname = 'test_rules.txt'
         s1 = '!192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 0x06/0xff DROP\n'
         s2 = '192.151.11.17/0 15.0.120.4/24 1 : 100 1221 : 1221 0x06/0xff PASS\n'
-
         assert self.p.read_file() == [s1, s2]
 
-    @skip
     def test_parse(self):
 
-        r1 = RawRule(['!192.151.11.17', '32'], ['15.0.120.4', '32'],\
-                     ['!10', '655'], ['1221', '1221'], ['0x06', '0xff'],\
-                      'DROP', 1, 0, 1, 0, 0, '0')
-        r2 = RawRule(['192.151.11.17', '0'], ['15.0.120.4', '24'],\
-                     ['1', '100'], ['1221', '1221'], ['0x06', '0xff'],\
-                      'PASS', 0, 0, 0, 0, 0, '1')
+        r1 = RawRule([192, 151, 11, 17, 32], [15, 0, 120, 4, 32],\
+                     [10, 655], [1221, 1221], [6, 255],\
+                      DROP, 1, 0, 1, 0, 0, '0')
+        r2 = RawRule([192, 151, 11, 17, 0], [15, 0, 120, 4, 24],\
+                     [1, 100], [1221, 1221], [6, 255],\
+                      PASS, 0, 0, 0, 0, 0, '1')
 
         assert self.p.parse() == [r1, r2]
 
-       
-@skip
+
 class TestRawRule(object):
 
 #     r = RawRule('', '', '', '', '', '', '', '', '', '', '', '')
-    r = RawRule(['!192.151.11.17', '32'], ['15.0.120.4', '32'],\
-                     ['!10', '655'], ['1221', '1221'], ['0x06', '0xff'],\
-                      'DROP', 1, 0, 1, 0, 0, '0')
+    r = RawRule([192, 151, 11, 17, 32], [15, 0, 120, 4, 32],\
+                     [10, 655], [1221, 1221], [6, 255],\
+                      DROP, 1, 0, 1, 0, 0, 0)
 
+    
+    def test_eq(self):
+        assert self.r == self.r    
+
+    @skip
     def test_protocol_to_interval(self):
         assert self.r.protocol_to_interval() == Interval(6, 6)
 
@@ -83,6 +86,7 @@ class TestRawRule(object):
     def test_port_to_interval(self):
         assert self.r.port_to_interval(self.r.dst_port) == Interval(1221, 1221)
 
+    @skip
     def test_subnet_to_interval(self):
         # check subnet '1.2.3.4/5'
         f1 = ['1.2.3.4', '5']
@@ -95,6 +99,7 @@ class TestRawRule(object):
         f3 = ['24.102.18.97', '17']
         assert self.r.subnet_to_interval(f3) == Interval(409337856, 409370623)
 
+    @skip
     def test_normalize(self):
         action = PASS
         r_id = 13
@@ -113,6 +118,7 @@ class TestRawRule(object):
         assert rules[2] == Rule(i1, Interval(5, m), i3, Interval(0, 6), i5, action, r_id)
         assert rules[3] == Rule(i1, Interval(5, m), i3, Interval(9, m), i5, action, r_id)
 
+    @skip
     def test_normalize_worst_case_num_rules(self):
         raw_rule = RawRule(Interval(1, 2), Interval(3, 4), Interval(5, 6),
                 Interval(7, 8), Interval(9, 10), DROP, True, True, True, True,
