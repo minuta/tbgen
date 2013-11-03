@@ -100,11 +100,18 @@ class RawRule(object):
     def __init__(self, src_host, dst_host, src_port, dst_port, protocol,\
                 action, src_host_neg, dst_host_neg, src_port_neg,\
                 dst_port_neg, prot_neg, rule_id):
+#         r = Rule(self.subnet_to_interval(self.src_host),\
+#                     self.subnet_to_interval(self.dst_host),\
+#                     self.port_to_interval(self.src_port),\
+#                     self.port_to_interval(self.dst_port),\
+#                     self.protocol_to_interval(),\
+#                     self.action, self.rule_id)
+#
         self.src_host = src_host
         self.dst_host = dst_host
         self.src_port = src_port
         self.dst_port = dst_port
-        self.protocol = protocol
+        self.protocol = self.protocol_to_interval(protocol)
         self.action = action
         self.src_host_neg = src_host_neg
         self.dst_host_neg = dst_host_neg
@@ -113,8 +120,8 @@ class RawRule(object):
         self.prot_neg     = prot_neg
         self.rule_id = rule_id
 
-    def protocol_to_interval(self):
-        protocol =  map(lambda x: int(x, 0), self.protocol)
+    def protocol_to_interval(self, protocol):
+#         protocol =  map(lambda x: int(x, 0), self.protocol)
         if protocol[1] == 0:
             return Interval(0, 255)
         return Interval(protocol[0], protocol[0])

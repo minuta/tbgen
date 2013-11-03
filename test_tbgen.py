@@ -78,9 +78,8 @@ class TestRawRule(object):
     def test_eq(self):
         assert self.r == self.r    
 
-    @skip
     def test_protocol_to_interval(self):
-        assert self.r.protocol_to_interval() == Interval(6, 6)
+        assert self.r.protocol_to_interval([6, 255]) == Interval(6, 6)
 
     @skip
     def test_port_to_interval(self):
