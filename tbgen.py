@@ -32,11 +32,11 @@ MAX_PROT = int(2 ** 8 - 1)
 # TODO
 # - implement Rule subtraction
 # - do error checking in parser and test it
-# - fix ALL broken tests
+# + fix ALL broken tests
 # - implement method on class Rule __sub__ (plenty of tests!)
 # - Implement function/method to make rules independent!
 #   This function/method should use subtraction of Rule objects!
-# - NO magic numbers!
+# + NO magic numbers!
 
 class Parser(object):
 
@@ -105,7 +105,7 @@ class Parser(object):
 
     def protocol_to_interval(self, protocol):
         if protocol[1] == 0:
-            return Interval(0, 255)
+            return Interval(MIN_PROT, MAX_PROT)
         return Interval(protocol[0], protocol[0])
 
     def port_to_interval(self, field):

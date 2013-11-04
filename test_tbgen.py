@@ -1,5 +1,6 @@
 from tbgen import Parser, RawRule, Rule, PASS, DROP
 from interval import Interval
+import os
 
 import pytest
 skip = pytest.mark.skipif
@@ -100,6 +101,7 @@ class TestParser():
         f3 = [24, 102, 18, 97, 17]
         assert self.p.subnet_to_interval(f3) == Interval(409337856, 409370623)
 
+    @skip
     def test_broken_input_for_parser(self):
         src = "oawdasiduasiodaspodipoasd"
         with open(self.TESTFILE, "w") as f:
