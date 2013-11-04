@@ -52,7 +52,7 @@ class Parser(object):
             parts = line.split()
             no_negs_list, negs = self.check_negs(parts)
 
-            args = self.get_fields(parts) + negs + list(str(rule_id))
+            args = self.fields_to_intervals(parts) + negs + list(str(rule_id))
             rules.append(RawRule(*args))
         return rules
 
@@ -68,6 +68,16 @@ class Parser(object):
             else:
                 res.append(False)
         return parts, res
+
+    def fields_to_intervals(self, fields):
+        f = self.get_fields(fields)
+        sh = self.subnet_to_interval(f[0])
+        dh = self.subnet_to_interval(f[1])
+        sp = self.port_to_interval(f[2])
+        dp = self.port_to_interval(f[3])
+        pr = self.protocol_to_interval(f[4])
+        action = f[5]
+        return [sh, dh, sp, dp, pr, action]
 
     def get_fields(self, fields):
         def split_subnet_str(field):
@@ -94,26 +104,6 @@ class Parser(object):
             lines = f.readlines()
         return lines
 
-
-class RawRule(object):
-
-    def __init__(self, src_host, dst_host, src_port, dst_port, protocol,\
-                action, src_host_neg, dst_host_neg, src_port_neg,\
-                dst_port_neg, prot_neg, rule_id):
-
-        self.src_host = self.subnet_to_interval(src_host)
-        self.dst_host = self.subnet_to_interval(dst_host)
-        self.src_port = self.port_to_interval(src_port)
-        self.dst_port = self.port_to_interval(dst_port)
-        self.protocol = self.protocol_to_interval(protocol)
-        self.action = action
-        self.src_host_neg = src_host_neg
-        self.dst_host_neg = dst_host_neg
-        self.src_port_neg = src_port_neg
-        self.dst_port_neg = dst_port_neg
-        self.prot_neg     = prot_neg
-        self.rule_id = rule_id
-
     def protocol_to_interval(self, protocol):
         if protocol[1] == 0:
             return Interval(0, 255)
@@ -135,6 +125,26 @@ class RawRule(object):
         high_addr = base_addr + (2 ** zero_bits) - 1
         return Interval(base_addr, high_addr)
 
+
+class RawRule(object):
+
+    def __init__(self, src_host, dst_host, src_port, dst_port, protocol,\
+                action, src_host_neg, dst_host_neg, src_port_neg,\
+                dst_port_neg, prot_neg, rule_id):
+
+        self.src_host = src_host
+        self.dst_host = dst_host
+        self.src_port = src_port
+        self.dst_port = dst_port
+        self.protocol = protocol
+        self.action = action
+        self.src_host_neg = src_host_neg
+        self.dst_host_neg = dst_host_neg
+        self.src_port_neg = src_port_neg
+        self.dst_port_neg = dst_port_neg
+        self.prot_neg     = prot_neg
+        self.rule_id = rule_id
+
     def _negate(self, field, min_value, max_value, neg_state):
         if neg_state == False:
             return [field]
@@ -143,10 +153,7 @@ class RawRule(object):
     def normalize(self):
         """ Returns a list of normalized Rule objects.
         """
-#         r = Rule(self.src_host, self.dst_host, self.src_port,\
-#                  self.dst_port, self.protocol, self.action, self.rule_id)
         rules = []
-#         set_trace()
         src_nets = self._negate(self.src_host, MIN_ADDR, MAX_ADDR, self.src_host_neg)
         dst_nets = self._negate(self.dst_host, MIN_ADDR, MAX_ADDR, self.dst_host_neg)
         src_ports = self._negate(self.src_port, MIN_PORT, MAX_PORT, self.src_port_neg)
@@ -236,12 +243,13 @@ def main():
 #     else:
 #         exit('Usage: %s <Firewall-Rule-Set-File>' % argv[0])
     filename = 'test_rules.txt'
+
     p = Parser(filename)
     p1, p2 = p.parse()
 
-    r1 = RawRule([192, 151, 11, 17, 32], [15, 0, 120, 4, 32],\
-                     [10, 655], [1221, 1221], [6, 255],\
-                      DROP, 1, 0, 1, 0, 0, 0)
+    print p1
+    print p2
+
 
     def rawrule_attrs(rule):
         print rule.src_host
@@ -251,7 +259,7 @@ def main():
         print rule.protocol
 
 #     rawrule_attrs(r1)
-    print r1.normalize()
+#     print r1.normalize()
         
 
 if __name__ == '__main__': main()
