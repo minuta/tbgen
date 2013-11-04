@@ -30,13 +30,13 @@ MIN_PROT = 0
 MAX_PROT = int(2 ** 8 - 1)
 # --------------------------------------------------------------
 # TODO
-# + implement normalize
-# + finish parser
 # - implement Rule subtraction
-# + ONLY the parser does parsing!
-# + RawRule objecst shall be instantiated ONLY with Interval objects,
-#   NOT with plain strings
-
+# - do error checking in parser and test it
+# - fix ALL broken tests
+# - implement method on class Rule __sub__ (plenty of tests!)
+# - Implement function/method to make rules independent!
+#   This function/method should use subtraction of Rule objects!
+# - NO magic numbers!
 
 class Parser(object):
 
@@ -174,11 +174,11 @@ class RawRule(object):
 
     def __str__(self):
         s1 = "RawRule: sn%s dn%s sp%s dp%s prot%s"\
-        % (self.src_host, self.dst_host, self.src_port, self.dst_port,\
+        % (self.src_host, self.dst_host, self.src_port, self.dst_port,
                    self.protocol) 
         s2 = " id(%s) action(%s) neg(%i %i %i %i %i)"\
-               % (self.rule_id, self.action, self.src_host_neg,\
-                   self.dst_host_neg, self.src_port_neg, self.dst_port_neg,\
+               % (self.rule_id, self.action, self.src_host_neg,
+                   self.dst_host_neg, self.src_port_neg, self.dst_port_neg,
                    self.prot_neg)
         return s1 + s2
 
@@ -220,6 +220,9 @@ class Rule(object):
         self.action = action
         self.rule_id = rule_id
 
+    def __sub__(self, other):
+        assert 0, "please implement me!"
+
     def __eq__(self, other):
         return  self.src_net == other.src_net\
             and self.dst_net == other.dst_net\
@@ -233,8 +236,8 @@ class Rule(object):
         return not self == other
 
     def __str__(self):
-        return "Rule:  %s %s %s %s %s %s %s" % (self.src_net, self.dst_net,\
-               self.src_ports, self.dst_ports, self.prots, self.action,\
+        return "Rule:  %s %s %s %s %s %s %s" % (self.src_net, self.dst_net,
+               self.src_ports, self.dst_ports, self.prots, self.action,
                self.rule_id)
 
     def __repr__(self):

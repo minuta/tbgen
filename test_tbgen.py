@@ -8,6 +8,13 @@ skip = pytest.mark.skipif
 class TestParser():
 
     p = Parser('test_rules.txt')
+    TESTFILE = "abc.txt"
+
+    def teardown_method(self, method):
+        try:
+            os.unlink(self.TESTFILE)
+        except OSError:
+            pass
 
     def test_check_negs(self):
         new_line, negs = self.p.check_negs( ['!192.151.11.17/32', \
@@ -93,6 +100,13 @@ class TestParser():
         f3 = [24, 102, 18, 97, 17]
         assert self.p.subnet_to_interval(f3) == Interval(409337856, 409370623)
 
+    def test_broken_input_for_parser(self):
+        src = "oawdasiduasiodaspodipoasd"
+        with open(self.TESTFILE, "w") as f:
+            f.write(src)
+        p = Parser(self.TESTFILE)
+        with py.test.raises(ParseError) as e:
+            p.parse()
 
 class TestRawRule(object):
 
