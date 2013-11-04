@@ -9,7 +9,6 @@ class TestParser():
 
     p = Parser('test_rules.txt')
 
- 
     def test_check_negs(self):
         new_line, negs = self.p.check_negs( ['!192.151.11.17/32', '15.0.120.4/32',\
                            '!10', ':', '655', '1221', ':', '1221',\
@@ -35,6 +34,14 @@ class TestParser():
                            '0x06/0xff']
         assert negs == [True, True, True, True, True]
 
+    def test_fields_to_intervals(self):
+        f = ['192.151.11.17/32', '15.0.120.4/32',\
+                           '10', ':', '655', '1221', ':', '1221',\
+                           '0x06/0xff', 'DROP'] 
+        assert self.p.fields_to_intervals(f) ==\
+                [ Interval(3231124241, 3231124241),\
+                  Interval(251688964, 251688964), Interval(10, 655),\
+                  Interval(1221, 1221), Interval(6, 6), DROP ]
 
     def test_get_fields(self):
         rule = '192.151.11.17/32 15.0.120.4/32 10 : 655 1221 : 1221 0x06/0xff DROP'
@@ -47,7 +54,6 @@ class TestParser():
                                             DROP ]
 
     def test_read_file(self):
-
         fname = 'test_rules.txt'
         s1 = '!192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 0x06/0xff DROP\n'
         s2 = '192.151.11.17/0 15.0.120.4/24 1 : 100 1221 : 1221 0x06/0xff PASS\n'
@@ -85,7 +91,6 @@ class TestParser():
         
         f3 = [24, 102, 18, 97, 17]
         assert self.p.subnet_to_interval(f3) == Interval(409337856, 409370623)
-
 
 
 @skip

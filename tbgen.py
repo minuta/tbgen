@@ -52,7 +52,7 @@ class Parser(object):
             parts = line.split()
             no_negs_list, negs = self.check_negs(parts)
 
-            args = self.fields_to_intervals(parts) + negs + list(str(rule_id))
+            args = self.fields_to_intervals(no_negs_list) + negs + list(str(rule_id))
             rules.append(RawRule(*args))
         return rules
 
@@ -131,7 +131,6 @@ class RawRule(object):
     def __init__(self, src_host, dst_host, src_port, dst_port, protocol,\
                 action, src_host_neg, dst_host_neg, src_port_neg,\
                 dst_port_neg, prot_neg, rule_id):
-
         self.src_host = src_host
         self.dst_host = dst_host
         self.src_port = src_port
@@ -173,7 +172,7 @@ class RawRule(object):
         s1 = "RawRule: sn%s dn%s sp%s dp%s prot%s"\
         % (self.src_host, self.dst_host, self.src_port, self.dst_port,\
                    self.protocol) 
-        s2 = "id(%s) action(%s) neg(%i %i %i %i %i)"\
+        s2 = " id(%s) action(%s) neg(%i %i %i %i %i)"\
                % (self.rule_id, self.action, self.src_host_neg,\
                    self.dst_host_neg, self.src_port_neg, self.dst_port_neg,\
                    self.prot_neg)
