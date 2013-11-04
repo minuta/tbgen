@@ -258,7 +258,9 @@ def main():
         print rule.protocol
 
 #     rawrule_attrs(r1)
-#     print r1.normalize()
+    print "\n"
+    for i in p1.normalize():
+        print i
         
 
 if __name__ == '__main__': main()

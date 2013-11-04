@@ -1,4 +1,4 @@
-from tbgen import Parser, RawRule, PASS, DROP
+from tbgen import Parser, RawRule, Rule, PASS, DROP
 from interval import Interval
 
 import pytest
@@ -93,7 +93,6 @@ class TestParser():
         assert self.p.subnet_to_interval(f3) == Interval(409337856, 409370623)
 
 
-@skip
 class TestRawRule(object):
 
 #     r = RawRule('', '', '', '', '', '', '', '', '', '', '', '')
@@ -114,7 +113,8 @@ class TestRawRule(object):
     def test_normalize(self):
         action = PASS
         r_id = 13
-        m = 2 ** 32 - 1
+        m = 2 ** 16 - 1
+        M = 2 ** 32 - 1
         i1 = Interval(1, 2)
         i3 = Interval(5, 6)
         i5 = Interval(9, 9)
@@ -128,10 +128,10 @@ class TestRawRule(object):
         assert len(rules) == 4
         assert rules[0] == Rule(i1, Interval(0, 2), i3, Interval(0, 6), i5, action, r_id)
         assert rules[1] == Rule(i1, Interval(0, 2), i3, Interval(9, m), i5, action, r_id)
-        assert rules[2] == Rule(i1, Interval(5, m), i3, Interval(0, 6), i5, action, r_id)
-        assert rules[3] == Rule(i1, Interval(5, m), i3, Interval(9, m), i5, action, r_id)
+        assert rules[2] == Rule(i1, Interval(5, M), i3, Interval(0, 6), i5, action, r_id)
+        assert rules[3] == Rule(i1, Interval(5, M), i3, Interval(9, m), i5, action, r_id)
 
-    @skip
+
     def test_normalize_worst_case_num_rules(self):
         raw_rule = RawRule(Interval(1, 2), Interval(3, 4), Interval(5, 6),
                 Interval(7, 8), Interval(9, 10), DROP, True, True, True, True,
