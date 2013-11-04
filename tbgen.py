@@ -29,14 +29,12 @@ MAX_PORT = int(2 ** 16 - 1)
 MIN_PROT = 0
 MAX_PROT = int(2 ** 8 - 1)
 # --------------------------------------------------------------
-
-
 # TODO
-# - implement normalize
-# - finish parser
+# + implement normalize
+# + finish parser
 # - implement Rule subtraction
-# - ONLY the parser does parsing!
-# - RawRule objecst shall be instantiated ONLY with Interval objects,
+# + ONLY the parser does parsing!
+# + RawRule objecst shall be instantiated ONLY with Interval objects,
 #   NOT with plain strings
 
 
@@ -52,7 +50,8 @@ class Parser(object):
             parts = line.split()
             no_negs_list, negs = self.check_negs(parts)
 
-            args = self.fields_to_intervals(no_negs_list) + negs + list(str(rule_id))
+            args = self.fields_to_intervals(no_negs_list) +\
+                    negs + list(str(rule_id))
             rules.append(RawRule(*args))
         return rules
 
@@ -153,11 +152,16 @@ class RawRule(object):
         """ Returns a list of normalized Rule objects.
         """
         rules = []
-        src_nets = self._negate(self.src_host, MIN_ADDR, MAX_ADDR, self.src_host_neg)
-        dst_nets = self._negate(self.dst_host, MIN_ADDR, MAX_ADDR, self.dst_host_neg)
-        src_ports = self._negate(self.src_port, MIN_PORT, MAX_PORT, self.src_port_neg)
-        dst_ports = self._negate(self.dst_port, MIN_PORT, MAX_PORT, self.dst_port_neg)
-        prots = self._negate(self.protocol, MIN_PROT, MAX_PROT, self.prot_neg)
+        src_nets = self._negate(self.src_host, MIN_ADDR, MAX_ADDR,\
+                self.src_host_neg)
+        dst_nets = self._negate(self.dst_host, MIN_ADDR, MAX_ADDR,\
+                self.dst_host_neg)
+        src_ports = self._negate(self.src_port, MIN_PORT, MAX_PORT,\
+                self.src_port_neg)
+        dst_ports = self._negate(self.dst_port, MIN_PORT, MAX_PORT,\
+                self.dst_port_neg)
+        prots = self._negate(self.protocol, MIN_PROT, MAX_PROT,\
+                self.prot_neg)
         for src_net in src_nets:
             for dst_net in dst_nets:
                 for src_port in src_ports:
@@ -182,8 +186,8 @@ class RawRule(object):
         return str(self)
 
     def __eq__(self, other):
-#         if not isinstance(other, RawRule):
-#             return False
+        if not isinstance(other, RawRule):
+            return False
         return self.src_host == other.src_host and\
         self.dst_host == other.dst_host and\
         self.src_port == other.src_port and\
@@ -197,8 +201,9 @@ class RawRule(object):
         self.prot_neg     == other.prot_neg and\
         self.rule_id == other.rule_id 
 
-#     def __ne__(self, other):
-#         return not self == other
+    def __ne__(self, other):
+        return not self == other
+
 
 class Rule(object):
     """ Represents a normalized firewall rule, i.e. there are no more negated
@@ -229,12 +234,14 @@ class Rule(object):
 
     def __str__(self):
         return "Rule:  %s %s %s %s %s %s %s" % (self.src_net, self.dst_net,\
-               self.src_ports, self.dst_ports, self.prots, self.action, self.rule_id)
+               self.src_ports, self.dst_ports, self.prots, self.action,\
+               self.rule_id)
 
     def __repr__(self):
         return str(self)
 
 # ------------------------ MAIN ---------------------------------------------
+
 
 def main():
 #     if len(argv)>=2:;U
