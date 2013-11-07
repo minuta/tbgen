@@ -1,19 +1,9 @@
 
 from sys import argv
 from pdb import set_trace
+import os
 
 from interval import (Interval, IntervalList)
-
-# class Action(object):
-#     
-#     def __init__(self, action_id):
-#         self.action_id = action_id
-# 
-#     def __eq__(self, other):
-#         return self.action_id == other.action_id
-# 
-#     def __ne__(self, other):
-#         return not self == other
 
 # -------------- CONSTANTS --------------------------------------
 PASS = 1
@@ -28,23 +18,47 @@ MAX_PORT = int(2 ** 16 - 1)
 
 MIN_PROT = 0
 MAX_PROT = int(2 ** 8 - 1)
+
+NMIN = 0          # Minimal number of tests
+NMAX = 1000       # Maximal number of tests
+OK_STR = 'ok'
+ERROR_STR1 = "Error : some args are not in allowed range (%i, %i)" %(NMIN, NMAX)
+ERROR_STR2 = 'Error : you haven\'t specified any valid number of tests...'
+ERROR_STR3 = "Error : Invalid args!\n"
+ERROR_STR4 = 'Usage: python %s <Firewall-Rule-Set-File> <Num of positive Tests> <Num of negative Tests>' % argv[0]
+ERROR_STR5 = 'Error : File "%s" doesn\'t exist or is empty!\n' %argv[1]
+
 # --------------------------------------------------------------
 # TODO
-# - implement Rule subtraction
-# - do error checking in parser and test it
+# + NO magic numbers!
+# + do error checking in parser and test it
 # + fix ALL broken tests
 # - implement method on class Rule __sub__ (plenty of tests!)
 # - Implement function/method to make rules independent!
 #   This function/method should use subtraction of Rule objects!
-# + NO magic numbers!
+# - implement Rule subtraction
+
+
+# class Action(object):
+#     
+#     def __init__(self, action_id):
+#         self.action_id = action_id
+# 
+#     def __eq__(self, other):
+#         return self.action_id == other.action_id
+# 
+#     def __ne__(self, other):
+#         return not self == other
+
 
 class Parser(object):
 
-    def __init__(self, filename, ):
-        self.filename = filename
+    def __init__(self, lines, ):
+        self.lines = lines
+
 
     def parse(self):
-        file_lines = self.read_file()
+        file_lines = self.lines
         rules = []
         for rule_id, line in enumerate(file_lines):
             parts = line.split()
@@ -55,6 +69,7 @@ class Parser(object):
             rules.append(RawRule(*args))
         return rules
 
+    
     def check_negs(self, parts):
         """ Check for Field-Negators, remove them and return a boolean list of
             negated and not negated fields
@@ -98,11 +113,6 @@ class Parser(object):
             raise ValueError("%s is an unknown rule action!" % _action)
         return [src_host, dst_host, src_port, dst_port, protocol, action]
                
-    def read_file(self):
-        with open(self.filename) as f:
-            lines = f.readlines()
-        return lines
-
     def protocol_to_interval(self, protocol):
         if protocol[1] == 0:
             return Interval(MIN_PROT, MAX_PROT)
@@ -244,34 +254,65 @@ class Rule(object):
         return str(self)
 
 # ------------------------ MAIN ---------------------------------------------
+NMIN = 0
+NMAX = 1000
 
+def check_args(a, b):
+    r = True
+    message = OK_STR
+    trange = range(NMIN, NMAX)
+    if a == b == 0:
+        message = ERROR_STR2
+        r = False
+    if a not in trange or b not in trange:
+        message = ERROR_STR1
+        r = False
+    return r, message
+
+def print_error_and_exit(message):
+    print message
+    exit(0)
+
+def read_file():
+    if len(argv) == 4:
+        fname = argv[1]
+        pos_tests = int(argv[2])
+        neg_tests = int(argv[3])
+
+        ok, message = check_args(pos_tests, neg_tests)
+        if ok != True:
+            print_error_and_exit(message)
+        if os.path.exists(fname) and os.stat(fname).st_size != 0:
+            with open(fname) as f:
+                lines = f.readlines()
+        else:
+            print_error_and_exit(ERROR_STR5)
+    else:
+        print_error_and_exit(ERROR_STR3 + ERROR_STR4)
+    return lines
 
 def main():
-#     if len(argv)>=2:;U
-#         filename = argv[1]
-#     else:
-#         exit('Usage: %s <Firewall-Rule-Set-File>' % argv[0])
-    filename = 'test_rules.txt'
-
-    p = Parser(filename)
+    
+    lines = read_file()
+    p = Parser(lines)
     p1, p2 = p.parse()
 
     print p1
     print p2
 
-
-    def rawrule_attrs(rule):
-        print rule.src_host
-        print rule.dst_host
-        print rule.src_port
-        print rule.dst_port
-        print rule.protocol
-
-#     rawrule_attrs(r1)
-    print "\n"
-    for i in p1.normalize():
-        print i
-        
+# 
+#     def rawrule_attrs(rule):
+#         print rule.src_host
+#         print rule.dst_host
+#         print rule.src_port
+#         print rule.dst_port
+#         print rule.protocol
+# 
+# #     rawrule_attrs(r1)
+#     print "\n"
+#     for i in p1.normalize():
+#         print i
+#         
 
 if __name__ == '__main__': main()
 
