@@ -26,7 +26,8 @@ ERROR_STR1 = "Error : some args are not in allowed range (%i, %i)" %(NMIN, NMAX)
 ERROR_STR2 = 'Error : you haven\'t specified any valid number of tests...'
 ERROR_STR3 = "Error : Invalid args!\n"
 ERROR_STR4 = 'Usage: python %s <Firewall-Rule-Set-File> <Num of positive Tests> <Num of negative Tests>' % argv[0]
-ERROR_STR5 = 'Error : File "%s" doesn\'t exist or is empty!\n' %argv[1]
+# ERROR_STR5 = 'Error : File "%s" doesn\'t exist or is empty!\n' %argv[1]
+ERROR_STR5 = 'Error : File doesn\'t exist or is empty!\n'
 
 # --------------------------------------------------------------
 # TODO
@@ -278,6 +279,7 @@ def read_file():
     """ Reads a given file, num of pos. & neg. tests from promt.
         Returns Stringlines, num of pos. & neg. tests
     """ 
+#     set_trace()
     if len(argv) == 4:
         fname = argv[1]
         pos_tests = int(argv[2])
@@ -296,7 +298,7 @@ def read_file():
     return lines, pos_tests, neg_tests
 
 def main():
-    
+    print len(argv) 
     lines, pos, neg = read_file()
     p = Parser(lines)
     p1, p2 = p.parse()
