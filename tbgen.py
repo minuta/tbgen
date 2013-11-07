@@ -69,7 +69,6 @@ class Parser(object):
             rules.append(RawRule(*args))
         return rules
 
-    
     def check_negs(self, parts):
         """ Check for Field-Negators, remove them and return a boolean list of
             negated and not negated fields
@@ -258,6 +257,8 @@ NMIN = 0
 NMAX = 1000
 
 def check_args(a, b):
+    """ Checks args, defining amount of pos. & neg. tests.
+    """
     r = True
     message = OK_STR
     trange = range(NMIN, NMAX)
@@ -274,6 +275,9 @@ def print_error_and_exit(message):
     exit(0)
 
 def read_file():
+    """ Reads a given file, num of pos. & neg. tests from promt.
+        Returns Stringlines, num of pos. & neg. tests
+    """ 
     if len(argv) == 4:
         fname = argv[1]
         pos_tests = int(argv[2])
@@ -289,17 +293,15 @@ def read_file():
             print_error_and_exit(ERROR_STR5)
     else:
         print_error_and_exit(ERROR_STR3 + ERROR_STR4)
-    return lines
+    return lines, pos_tests, neg_tests
 
 def main():
     
-    lines = read_file()
+    lines, pos, neg = read_file()
     p = Parser(lines)
     p1, p2 = p.parse()
-
     print p1
     print p2
-
 # 
 #     def rawrule_attrs(rule):
 #         print rule.src_host
