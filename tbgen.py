@@ -28,6 +28,7 @@ ERROR_STR3 = "Error : Invalid args!\n"
 ERROR_STR4 = 'Usage: python %s <Firewall-Rule-Set-File> <Num of positive Tests> <Num of negative Tests>' % argv[0]
 # ERROR_STR5 = 'Error : File "%s" doesn\'t exist or is empty!\n' %argv[1]
 ERROR_STR5 = 'Error : File doesn\'t exist or is empty!\n'
+ERROR_STR6 = 'Error : Invalid Rule Structure in Rule : '
 
 # --------------------------------------------------------------
 # TODO
@@ -63,12 +64,15 @@ class Parser(object):
         rules = []
         for rule_id, line in enumerate(file_lines):
             parts = line.split()
+            if len(parts) != 10:
+                print_error_and_exit(ERROR_STR6 + str(rule_id))
             no_negs_list, negs = self.check_negs(parts)
 
-            args = self.fields_to_intervals(no_negs_list) +\
+            args = self.fields_to_intervals(no_negs_list, rule_id) +\
                     negs + list(str(rule_id))
             rules.append(RawRule(*args))
         return rules
+
 
     def check_negs(self, parts):
         """ Check for Field-Negators, remove them and return a boolean list of
@@ -83,8 +87,8 @@ class Parser(object):
                 res.append(False)
         return parts, res
 
-    def fields_to_intervals(self, fields):
-        f = self.get_fields(fields)
+    def fields_to_intervals(self, fields, r_id):
+        f = self.get_fields(fields, r_id)
         sh = self.subnet_to_interval(f[0])
         dh = self.subnet_to_interval(f[1])
         sp = self.port_to_interval(f[2])
@@ -93,16 +97,47 @@ class Parser(object):
         action = f[5]
         return [sh, dh, sp, dp, pr, action]
 
-    def get_fields(self, fields):
+    def get_fields(self, fields, r_id):
+
+        rule_str = " in Rule: " + str(r_id)
+
         def split_subnet_str(field):
             a = field.split('/')
             return map(int, a[0].split('.')) + [int(a[1])]
 
+        def check_subnet(parts, msg):
+            for i in parts[:-1]:
+                if i < 0 or i > 255:
+                    print_error_and_exit(msg + rule_str)
+            if parts[-1] <0 or parts[-1]>32:
+                print_error_and_exit(msg + "Invalid Mask" + rule_str)
+
+        def check_port(parts, msg):
+            for i in parts:
+                if i<MIN_PORT or i>MAX_PORT:
+                    print_error_and_exit(msg + rule_str)
+
+        def check_protocol(p):
+            if p[0] < MIN_PROT or p[0] > MAX_PROT:
+                print_error_and_exit("Error : Invalid Procotol Number" + rule_str)
+            if p[1] not in [0, 255]:
+                print_error_and_exit("Error : Invalid Protocol Mask" + rule_str)
+
+
         src_host = split_subnet_str(fields[0])
+        check_subnet(src_host, "Error : Invalid Source Net! ")
+
         dst_host = split_subnet_str(fields[1])
+        check_subnet(dst_host, "Error : Invalid Destination Net! ")
+
         src_port = [int(fields[2]), int(fields[4])]
+        check_port(src_port, "Error : Invalid Source Port")
+
         dst_port = [int(fields[5]), int(fields[7])]
+        check_port(dst_port, "Error : Invalid Destination Port")
+
         protocol = [int(x, 0) for x in fields[8].split('/')]
+        check_protocol(protocol)
 
         _action = fields[9]
         if _action == 'DROP':
@@ -110,7 +145,9 @@ class Parser(object):
         elif _action == 'PASS':
             action = PASS
         else:
-            raise ValueError("%s is an unknown rule action!" % _action)
+            print_error_and_exit("Error : '%s' is an unknown rule action!"\
+                    % _action + rule_str)
+
         return [src_host, dst_host, src_port, dst_port, protocol, action]
                
     def protocol_to_interval(self, protocol):
@@ -298,7 +335,6 @@ def read_file():
     return lines, pos_tests, neg_tests
 
 def main():
-    print len(argv) 
     lines, pos, neg = read_file()
     p = Parser(lines)
     p1, p2 = p.parse()
@@ -319,5 +355,3 @@ def main():
 #         
 
 if __name__ == '__main__': main()
-
-
