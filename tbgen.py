@@ -678,46 +678,22 @@ class TestRule2d(object):
                             Rule2d(Interval(4, 7), Interval(1, 3)),\
                             Rule2d(Interval(4, 7), Interval(8, 9)) ]
   
-
-#     # Center-Block, no empty blocks
-#     def test_sub(self):
-#         r1 = Rule2d( Interval(1, 9), Interval(1, 9) )
-#         r2 = Rule2d( Interval(4, 7), Interval(4, 7) )
-# 
-#         b1 = [ Interval(1, 4), Interval(1, 9) ]
-#         b2 = [ Interval(7, 9), Interval(1, 9) ]
-#         b3 = [ Interval(4, 7), Interval(7, 9) ]
-#         b4 = [ Interval(4, 7), Interval(1, 4) ]
-# 
-#         assert r1 - r2 == [b1[0], b1[1], b2[0], b2[1], \
-#                                      b3[0], b3[1], b4[0], b4[1] ]
-#     # Bottom-Block is empty
-#     def test_sub2(self):
-#         r1 = Rule2d( Interval(1, 9), Interval(1, 9) )
-#         r2 = Rule2d( Interval(3, 6), Interval(1, 6) )
-# 
-#         b1 = [ Interval(1, 3), Interval(1, 9) ]
-#         b2 = [ Interval(6, 9), Interval(1, 9) ]
-#         b3 = [ Interval(3, 6), Interval(6, 9) ] 
-#         b4 = [ Interval(3, 6), Interval(1, 1) ] # Empty Block => take-away-rule
-# 
-# 
-#         assert r1 - r2 == [b1[0], b1[1], b2[0], b2[1], \
-#                                      b3[0], b3[1], b4[0], b4[1] ]
-# 
-#     # Top-Block and Right-Block are empty
-#     def test_sub3(self):
-#         r1 = Rule2d( Interval(1, 9), Interval(1, 9) )
-#         r2 = Rule2d( Interval(6, 9), Interval(6, 9) )
-# 
-#         b1 = [ Interval(1, 6), Interval(1, 9) ]
-#         b2 = [ Interval(9, 9), Interval(1, 9) ]    # Empty Block
-#         b3 = [ Interval(6, 9), Interval(9, 9) ]    # Empty Block
-#         b4 = [ Interval(6, 9), Interval(1, 6) ]    
-# 
-#         assert r1 - r2 == [b1[0], b1[1], b2[0], b2[1], \
-#                                      b3[0], b3[1], b4[0], b4[1] ]
-
+    # Bottom-Block is empty
+    def test_sub2(self):
+        r1 = Rule2d( Interval(1, 9), Interval(1, 9) )
+        r2 = Rule2d( Interval(3, 6), Interval(1, 6) )
+        assert r1 - r2 == [ Rule2d(Interval(1, 2), Interval(1, 9)),\
+                            Rule2d(Interval(7, 9), Interval(1, 9)),\
+                            Rule2d(Interval(3, 6), Interval(7, 9)) ]
+        
+    # Top-Block and Right-Block are empty
+    def test_sub3(self):
+        r1 = Rule2d( Interval(1, 9), Interval(1, 9) )
+        r2 = Rule2d( Interval(6, 9), Interval(6, 9) )
+        assert r1 - r2 == [ Rule2d(Interval(1, 5), Interval(1, 9)),\
+                            Rule2d(Interval(6, 9), Interval(1, 5)) ]
+  
+ 
 class TestRule3d(object):
     # r2 is in middle of r1 => No empty Blocks
     def test_sub(self):
@@ -781,7 +757,7 @@ def read_file():
 
 def main():
     r1 = Rule2d( Interval(1, 9), Interval(1, 9) )
-    r2 = Rule2d( Interval(4, 7), Interval(4, 7) )
+    r2 = Rule2d( Interval(6, 9), Interval(6, 9) )
     v = r1 - r2
     print v
 
