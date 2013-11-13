@@ -675,6 +675,10 @@ def read_file():
     """ 
     if len(argv) == 4:
         fname = argv[1]
+
+        if not argv[2].isdigit() or not argv[3].isdigit():
+            print_error_and_exit("Error : Wrong argument type!")
+
         pos_tests = int(argv[2])
         neg_tests = int(argv[3])
 
@@ -691,16 +695,7 @@ def read_file():
     return lines, pos_tests, neg_tests
 
 def main():
-    r1 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
-                Interval(1, 10), Interval(1, 10), DROP, 1)
-    r2 = Rule(Interval(3, 5), Interval(3, 5), Interval(1, 10), \
-                Interval(1, 10), Interval(1, 10), DROP, 1)
-
-
-    v = r1 - r2
-    for r in v:
-        print r 
-
+    lines, pos, neg = read_file()
 if __name__ == '__main__': main()
 
 
