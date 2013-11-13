@@ -433,26 +433,12 @@ class Rule(object):
         self.i4 = self.dst_ports
         self.i5 = self.prots
 
-#         self.x1 = src_net.a
-#         self.x2 = src_net.b
-#         self.y1 = dst_net.a
-#         self.y2 = dst_net.b
-#         self.z1 = src_ports.a
-#         self.z2 = src_ports.b
-#         self.v1 = dst_ports.a
-#         self.v2 = dst_ports.b
-#         self.w1 = prots.a
-#         self.w2 = prots.b
-
-    def __sub__(self, other):
-        assert 0, "please implement me!"
-
     def __eq__(self, other):
-        return  self.src_net == other.src_net\
-            and self.dst_net == other.dst_net\
-            and self.src_ports == other.src_ports\
-            and self.dst_ports == other.dst_ports\
-            and self.prots == other.prots\
+        return  self.i1 == other.i1\
+            and self.i2 == other.i2\
+            and self.i3 == other.i3\
+            and self.i4 == other.i4\
+            and self.i5 == other.i5\
             and self.rule_id == other.rule_id\
             and self.action == other.action
 
@@ -460,9 +446,8 @@ class Rule(object):
         return not self == other
 
     def __str__(self):
-        return "Rule:  %s %s %s %s %s %s %s" % (self.src_net, self.dst_net,
-               self.src_ports, self.dst_ports, self.prots, self.action,
-               self.rule_id)
+        return "Rule:  %s %s %s %s %s %s %s" % (self.i1, self.i2,
+               self.i3, self.i4, self.i5, self.action, self.rule_id)
 
     def __repr__(self):
         return str(self)
@@ -542,113 +527,6 @@ class TestRule(object):
                   Interval(1, 10), Interval(6, 10), DROP, 1)
         assert r1 - r2 == [r3, r4]
  
-
-class Rule1d(object):
-    """ Sub of 1-dim-Rules
-    """
-    def __init__(self, i):
-        self.i = i
-
-    def __repr__(self):
-        return "Rule-1D( %s )" %(self.i)
-
-    def __sub__(self, other):
-        return [ Rule1d(i) for i in (self.i - other.i)]
-
-    def __eq__(self, other):
-        return self.i == other.i
-
-class Rule2d(object):
-    """ Sub of 2-dim-Rules
-    """
-    def __init__(self, i1, i2):
-        self.i1 = i1
-        self.i2 = i2
-
-    def __sub__(self, other):
-        return [ Rule2d(i, self.i2) for i in (self.i1 - other.i1) ] + \
-               [ Rule2d(other.i1, x) for x in (self.i2 - other.i2) ]
-
-    def __repr__(self):
-        return "Rule-2D( %s, %s )" %(self.i1, self.i2)
-
-    def __eq__(self, other):
-        return self.i1 == other.i1 and self.i2 == other.i2
-
-
-class Rule3d(object):
-    """ Sub of 3-dim-Rules
-    """
-    def __init__(self, i1, i2, i3):
-        self.i1 = i1
-        self.i2 = i2
-        self.i3 = i3
-
-    def __repr__(self):
-        return "3-dim-rule( %s, %s, %s )" %(self.i1, self.i2, self.i3)
-
-    def __sub__(self, other):
-
-        return [ Rule3d(i, self.i2, self.i3) for i in (self.i1 - other.i1)] +\
-               [ Rule3d(other.i1, i, self.i3) for i in (self.i2 - other.i2)] +\
-               [ Rule3d(other.i1, other.i2, i) for i in (self.i3 - other.i3)]
-
-    def __eq__(self, other):
-        return self.i1 == other.i1 and self.i2 == other.i2 and self.i3 == other.i3
-
-
-class TestRule1d(object):
-    def test_sub(self):          # no empty blocks
-        r1 = Rule1d( Interval(1, 10) )
-        r2 = Rule1d( Interval(4, 7) )
-        assert r1 - r2 == [ Rule1d(Interval(1, 3)), Rule1d(Interval(8, 10)) ]
-
-    def test_sub2(self):          # left block is empty
-        r1 = Rule1d( Interval(1, 10) )
-        r2 = Rule1d( Interval(1, 6) )
-        assert r1 - r2 == [ Rule1d(Interval(7, 10)) ]
-
-
-class TestRule2d(object):
-    def test_sub(self):
-        r1 = Rule2d( Interval(1, 9), Interval(1, 9) )
-        r2 = Rule2d( Interval(4, 7), Interval(4, 7) )
-        assert r1 - r2 == [ Rule2d(Interval(1, 3), Interval(1, 9)),\
-                            Rule2d(Interval(8, 9), Interval(1, 9)),\
-                            Rule2d(Interval(4, 7), Interval(1, 3)),\
-                            Rule2d(Interval(4, 7), Interval(8, 9)) ]
-  
-    # Bottom-Block is empty
-    def test_sub2(self):
-        r1 = Rule2d( Interval(1, 9), Interval(1, 9) )
-        r2 = Rule2d( Interval(3, 6), Interval(1, 6) )
-        assert r1 - r2 == [ Rule2d(Interval(1, 2), Interval(1, 9)),\
-                            Rule2d(Interval(7, 9), Interval(1, 9)),\
-                            Rule2d(Interval(3, 6), Interval(7, 9)) ]
-        
-    # Top-Block and Right-Block are empty
-    def test_sub3(self):
-        r1 = Rule2d( Interval(1, 9), Interval(1, 9) )
-        r2 = Rule2d( Interval(6, 9), Interval(6, 9) )
-        assert r1 - r2 == [ Rule2d(Interval(1, 5), Interval(1, 9)),\
-                            Rule2d(Interval(6, 9), Interval(1, 5)) ]
-  
- 
-class TestRule3d(object):
-    # r2 is in middle of r1 => No empty Blocks
-    def test_sub(self):
-        r1 = Rule3d( Interval(1, 9), Interval(1, 9), Interval(1, 9) )
-        r2 = Rule3d( Interval(4, 6), Interval(4, 6), Interval(4, 6) )
-
-        x1 = Rule3d(Interval(1, 3), Interval(1, 9), Interval(1, 9) )
-        x2 = Rule3d(Interval(7, 9), Interval(1, 9), Interval(1, 9) )
-        x3 = Rule3d(Interval(4, 6), Interval(1, 3), Interval(1, 9) )
-        x4 = Rule3d(Interval(4, 6), Interval(7, 9), Interval(1, 9) )
-        x5 = Rule3d(Interval(4, 6), Interval(4, 6), Interval(1, 3) )
-        x6 = Rule3d(Interval(4, 6), Interval(4, 6), Interval(7, 9) )
-        
-        assert r1 - r2 == [x1, x2, x3, x4, x5, x6]
-
 
 # ------------------------ MAIN ---------------------------------------------
 def check_args(a, b):
