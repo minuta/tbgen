@@ -539,10 +539,7 @@ class Rule1d(object):
         return "Rule-1D( %s )" %(self.i)
 
     def __sub__(self, other):
-        res = [] 
-        for i in (self.i - other.i):
-            res.append( Rule1d(i) )
-        return res
+        return [ Rule1d(i) for i in (self.i - other.i)]
 
     def __eq__(self, other):
         return self.i == other.i
@@ -555,53 +552,14 @@ class Rule2d(object):
         self.i2 = i2
 
     def __sub__(self, other):
-        res = []
-        for i in (self.i1 - other.i1):
-            res.append(Rule2d(i, self.i2))
-        for i in (self.i2 - other.i2):
-            res.append(Rule2d(other.i1, i)) 
-        return res
+        return [ Rule2d(i, self.i2) for i in (self.i1 - other.i1) ] + \
+               [ Rule2d(other.i1, x) for x in (self.i2 - other.i2) ]
 
     def __repr__(self):
         return "Rule-2D( %s, %s )" %(self.i1, self.i2)
 
     def __eq__(self, other):
         return self.i1 == other.i1 and self.i2 == other.i2
-
-#     def __init__(self, i1, i2):
-#         self.i1 = i1
-#         self.i2 = i2
-#         self.x1 = i1.a
-#         self.x2 = i1.b
-#         self.y1 = i2.a
-#         self.y2 = i2.b
-# 
-#     def __repr__(self):
-#         return "Rule-2D( %s, %s )" %(self.i1, self.i2)
-# 
-#     def __sub__(self, other):
-#         """ Block-View-Order : b1 = Left, b2 = Top, b3 = Bottom, b4 = Right
-#         """
-#         X1 = self.x1
-#         X2 = self.x2
-#         Y1 = self.y1
-#         Y2 = self.y2
-# 
-#         x1 = other.x1
-#         x2 = other.x2
-#         y1 = other.y1
-#         y2 = other.y2
-# 
-#         # Left Block
-#         b1 = Interval(X1, x1), Interval(Y1, Y2)
-#         # Right Block
-#         b2 = Interval(x2, X2), Interval(Y1, Y2)
-#         # Top Block
-#         b3 = Interval(x1, x2), Interval(y2, Y2)
-#         # Bottom Block
-#         b4 = Interval(x1, x2), Interval(Y1, y1)
-# 
-#         return [ b1[0], b1[1], b2[0], b2[1], b3[0], b3[1], b4[0], b4[1] ]
 
 
 class Rule3d(object):
