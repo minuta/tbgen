@@ -419,19 +419,14 @@ class Rule(object):
     
     def __init__(self, src_net, dst_net, src_ports, dst_ports, prots,\
                        action, rule_id):
-        self.src_net = src_net
-        self.dst_net = dst_net
-        self.src_ports = src_ports
-        self.dst_ports = dst_ports
-        self.prots = prots
+        self.i1 = src_net
+        self.i2 = dst_net
+        self.i3 = src_ports
+        self.i4 = dst_ports
+        self.i5 = prots
         self.action = action
         self.rule_id = rule_id
 
-        self.i1 = self.src_net
-        self.i2 = self.dst_net
-        self.i3 = self.src_ports
-        self.i4 = self.dst_ports
-        self.i5 = self.prots
 
     def __eq__(self, other):
         return  self.i1 == other.i1\
