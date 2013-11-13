@@ -523,6 +523,21 @@ class TestRule(object):
         assert r1 - r2 == [r3, r4]
  
 
+    # TODO make this test pass
+    def test_num_rules(self):
+        I = Interval
+        r1 = Rule(I(1, 5), I(2, 5), I(3, 3), I(4, 4), I(5, 5), DROP, 1)
+        r2 = Rule(I(2, 6), I(1, 3), I(3, 3), I(4, 4), I(5, 5), PASS, 2)
+
+#         r3 = Rule(I(1, 2), I(1, 5), I(3, 3), I(4, 4), I(5, 5), DROP, 1)
+
+#         diff = r2 - r1
+#         assert len(diff) == 2
+#         assert diff[0] == Rule(I(6, 6), I(1, 3), I(3, 3), I(4, 4), I(5, 5),
+#                 PASS, 2)
+#         assert diff[1] == Rule(I(2, 5), I(1, 1), I(3, 3), I(4, 4), I(5, 5),
+#                 PASS, 2)
+
 # ------------------------ MAIN ---------------------------------------------
 def check_args(a, b):
     """ Checks args, defining amount of pos. & neg. tests.
@@ -541,6 +556,7 @@ def check_args(a, b):
 def print_error_and_exit(message, error_num):
     print message
     exit(error_num)
+
 
 def read_file():
     """ Reads a given file, num of pos. & neg. tests from promt.
@@ -569,7 +585,16 @@ def read_file():
     return lines, pos_tests, neg_tests
 
 def main():
-    lines, pos, neg = read_file()
+#     lines, pos, neg = read_file()
+
+    I = Interval
+    r1 = Rule(I(1, 5), I(2, 5), I(3, 3), I(4, 4), I(5, 5), DROP, 1)
+    r2 = Rule(I(2, 6), I(1, 3), I(3, 3), I(4, 4), I(5, 5), PASS, 2)
+    v = r1 - r2
+    for i in v:
+        print i
+
+
 if __name__ == '__main__': main()
 
 
