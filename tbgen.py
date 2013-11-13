@@ -1,6 +1,6 @@
 from sys import argv
 from pdb import set_trace
-import os, pytest
+import os, pytest, errno
 
 skip = pytest.mark.skipif
 
@@ -225,7 +225,7 @@ class Parser(object):
         for rule_id, line in enumerate(file_lines):
             parts = line.split()
             if len(parts) != 10:
-                print_error_and_exit(ERROR_STR6 + str(rule_id))
+                print_error_and_exit(ERROR_STR6 + str(rule_id), errno.EINVAL )
             no_negs_list, negs = self.check_negs(parts)
 
             args = self.fields_to_intervals(no_negs_list, rule_id) +\
@@ -268,20 +268,20 @@ class Parser(object):
         def check_subnet(parts, msg):
             for i in parts[:-1]:
                 if i < 0 or i > 255:
-                    print_error_and_exit(msg + rule_str)
+                    print_error_and_exit(msg + rule_str, errno.EINVAL)
             if parts[-1] <0 or parts[-1]>32:
-                print_error_and_exit(msg + "Invalid Mask" + rule_str)
+                print_error_and_exit(msg + "Invalid Mask" + rule_str, errno.EINVAL)
 
         def check_port(parts, msg):
             for i in parts:
                 if i<MIN_PORT or i>MAX_PORT:
-                    print_error_and_exit(msg + rule_str)
+                    print_error_and_exit(msg + rule_str, errno.EINVAL)
 
         def check_protocol(p):
             if p[0] < MIN_PROT or p[0] > MAX_PROT:
-                print_error_and_exit("Error : Invalid Procotol Number" + rule_str)
+                print_error_and_exit("Error : Invalid Procotol Number" + rule_str, errno.EINVAL)
             if p[1] not in [0, 255]:
-                print_error_and_exit("Error : Invalid Protocol Mask" + rule_str)
+                print_error_and_exit("Error : Invalid Protocol Mask" + rule_str, errno.EINVAL)
 
 
         src_host = split_subnet_str(fields[0])
@@ -306,7 +306,7 @@ class Parser(object):
             action = PASS
         else:
             print_error_and_exit("Error : '%s' is an unknown rule action!"\
-                    % _action + rule_str)
+                    % _action + rule_str, errno.EINVAL)
 
         return [src_host, dst_host, src_port, dst_port, protocol, action]
                
@@ -538,9 +538,9 @@ def check_args(a, b):
         r = False
     return r, message
 
-def print_error_and_exit(message):
+def print_error_and_exit(message, error_num):
     print message
-    exit(0)
+    exit(error_num)
 
 def read_file():
     """ Reads a given file, num of pos. & neg. tests from promt.
@@ -550,21 +550,22 @@ def read_file():
         fname = argv[1]
 
         if not argv[2].isdigit() or not argv[3].isdigit():
-            print_error_and_exit("Error : Wrong argument type!")
+            print_error_and_exit("Error : Wrong argument type!\n" + \
+                    ERROR_STR4, errno.EINVAL)
 
         pos_tests = int(argv[2])
         neg_tests = int(argv[3])
 
         ok, message = check_args(pos_tests, neg_tests)
         if ok != True:
-            print_error_and_exit(message)
+            print_error_and_exit(message, errno.EINVAL)
         if os.path.exists(fname) and os.stat(fname).st_size != 0:
             with open(fname) as f:
                 lines = f.readlines()
         else:
-            print_error_and_exit(ERROR_STR5)
+            print_error_and_exit(ERROR_STR5, errno.ENOENT)
     else:
-        print_error_and_exit(ERROR_STR3 + ERROR_STR4)
+        print_error_and_exit(ERROR_STR3 + ERROR_STR4, errno.EINVAL)
     return lines, pos_tests, neg_tests
 
 def main():
