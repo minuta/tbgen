@@ -426,16 +426,23 @@ class Rule(object):
         self.prots = prots
         self.action = action
         self.rule_id = rule_id
-        self.x1 = src_net.a
-        self.x2 = src_net.b
-        self.y1 = dst_net.a
-        self.y2 = dst_net.b
-        self.z1 = src_ports.a
-        self.z2 = src_ports.b
-        self.v1 = dst_ports.a
-        self.v2 = dst_ports.b
-        self.w1 = prots.a
-        self.w2 = prots.b
+
+        self.i1 = self.src_net
+        self.i2 = self.dst_net
+        self.i3 = self.src_ports
+        self.i4 = self.dst_ports
+        self.i5 = self.prots
+
+#         self.x1 = src_net.a
+#         self.x2 = src_net.b
+#         self.y1 = dst_net.a
+#         self.y2 = dst_net.b
+#         self.z1 = src_ports.a
+#         self.z2 = src_ports.b
+#         self.v1 = dst_ports.a
+#         self.v2 = dst_ports.b
+#         self.w1 = prots.a
+#         self.w2 = prots.b
 
     def __sub__(self, other):
         assert 0, "please implement me!"
@@ -461,74 +468,81 @@ class Rule(object):
         return str(self)
 
     def __sub__(self, other):
-        X1 = self.x1
-        X2 = self.x2
-        Y1 = self.y1
-        Y2 = self.y2
-        Z1 = self.z1
-        Z2 = self.z2
-        V1 = self.v1
-        V2 = self.v2
-        W1 = self.w1
-        W2 = self.w2
+        r1 = [ Rule(i, self.i2, self.i3, self.i4, self.i5,\
+               self.action, self.rule_id) for i in (self.i1 - other.i1) ]
+        r2 = [ Rule(other.i1, i, self.i3, self.i4, self.i5,\
+               self.action, self.rule_id) for i in (self.i2 - other.i2) ]
+        r3 = [ Rule(other.i1, other.i2, i, self.i4, self.i5,\
+               self.action, self.rule_id) for i in (self.i3 - other.i3) ]
+        r4 = [ Rule(other.i1, other.i2, other.i3, i, self.i5,\
+               self.action, self.rule_id) for i in (self.i4 - other.i4) ]
+        r5 = [ Rule(other.i1, other.i2, other.i3, other.i4, i,\
+               self.action, self.rule_id) for i in (self.i5 - other.i5) ]
+        return r1 + r2 + r3 + r4 + r5
+ 
 
-        x1 = other.x1
-        x2 = other.x2
-        y1 = other.y1
-        y2 = other.y2
-        z1 = other.z1
-        z2 = other.z2
-        v1 = other.v1
-        v2 = other.v2
-        w1 = other.w1
-        w2 = other.w2
+class TestRule(object):
+    def test_sub(self):
+        r1 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
+                  Interval(1, 10), Interval(1, 10), DROP, 1)
+        r2 = Rule(Interval(3, 5), Interval(1, 10), Interval(1, 10), \
+                  Interval(1, 10), Interval(1, 10), DROP, 1)
 
-        # Left Block
-        b1 = Interval(X1, x1), Interval(Y1, Y2), Interval(Z1, Z2),\
-             Interval(V1, V2), Interval(W1, W2)
-        # Right Block
-        b2 = Interval(x2, X2), Interval(Y1, Y2), Interval(Z1, Z2),\
-             Interval(V1, V2), Interval(W1, W2)
-        # Top Block
-        b3 = Interval(x1, x2), Interval(y2, Y2), Interval(Z1, Z2),\
-             Interval(V1, V2), Interval(W1, W2)
-        # Bottom Block
-        b4 = Interval(x1, x2), Interval(Y1, y1), Interval(Z1, Z2),\
-             Interval(V1, V2), Interval(W1, W2)
-        # Back Block
-        b5 = Interval(x1, x2), Interval(y1, y2), Interval(z2, Z2),\
-             Interval(V1, V2), Interval(W1, W2)
-        # Front Block
-        b6 = Interval(x1, x2), Interval(y1, y2), Interval(Z1, z1),\
-             Interval(V1, V2), Interval(W1, W2)
-        # Right V-Dim
-        b7 = Interval(x1, x2), Interval(y1, y2), Interval(z1, z2),\
-             Interval(v2, V2), Interval(W1, W2)
-        # Left V-Dim
-        b8 = Interval(x1, x2), Interval(y1, y2), Interval(z1, z2),\
-             Interval(V1, v1), Interval(W1, W2)
-        # Right W-Dim
-        b9 = Interval(x1, x2), Interval(y1, y2), Interval(z1, z2),\
-             Interval(v1, v2), Interval(w2, W2)
-        # Left W-Dim
-        b10 = Interval(x1, x2), Interval(y1, y2), Interval(z1, z2),\
-             Interval(v1, v2), Interval(W1, w1)
+        r3 = Rule(Interval(1, 2), Interval(1, 10), Interval(1, 10), \
+                  Interval(1, 10), Interval(1, 10), DROP, 1)
+        r4 = Rule(Interval(6, 10), Interval(1, 10), Interval(1, 10), \
+                  Interval(1, 10), Interval(1, 10), DROP, 1)
+        assert r1 - r2 == [r3, r4]
 
+    def test_sub2(self):
+        r1 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
+                  Interval(1, 10), Interval(1, 10), DROP, 1)
+        r2 = Rule(Interval(1, 10), Interval(3, 5), Interval(1, 10), \
+                  Interval(1, 10), Interval(1, 10), DROP, 1)
 
-        return [ b1[0], b1[1], b1[2], b1[3], b1[4], \
-                 b2[0], b2[1], b2[2], b2[3], b2[4], \
-                 b3[0], b3[1], b3[2], b3[3], b3[4], \
-                 b4[0], b4[1], b4[2], b4[3], b4[4], \
-                 b5[0], b5[1], b5[2], b5[3], b5[4], \
-                 b6[0], b6[1], b6[2], b6[3], b6[4], \
-                 b7[0], b7[1], b7[2], b7[3], b7[4], \
-                 b8[0], b8[1], b8[2], b8[3], b8[4], \
-                 b9[0], b9[1], b9[2], b9[3], b9[4], \
-                 b10[0], b10[1], b10[2], b10[3], b10[4] ]
+        r3 = Rule(Interval(1, 10), Interval(1, 2), Interval(1, 10), \
+                  Interval(1, 10), Interval(1, 10), DROP, 1)
+        r4 = Rule(Interval(1, 10), Interval(6, 10), Interval(1, 10), \
+                  Interval(1, 10), Interval(1, 10), DROP, 1)
+        assert r1 - r2 == [r3, r4]
 
+    def test_sub3(self):
+        r1 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
+                  Interval(1, 10), Interval(1, 10), DROP, 1)
+        r2 = Rule(Interval(1, 10), Interval(1, 10), Interval(3, 5), \
+                  Interval(1, 10), Interval(1, 10), DROP, 1)
 
+        r3 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 2), \
+                  Interval(1, 10), Interval(1, 10), DROP, 1)
+        r4 = Rule(Interval(1, 10), Interval(1, 10), Interval(6, 10), \
+                  Interval(1, 10), Interval(1, 10), DROP, 1)
+        assert r1 - r2 == [r3, r4]
+ 
+    def test_sub4(self):
+        r1 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
+                  Interval(1, 10), Interval(1, 10), DROP, 1)
+        r2 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
+                  Interval(3, 5), Interval(1, 10), DROP, 1)
 
-# ------------------------ MAIN ---------------------------------------------
+        r3 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
+                  Interval(1, 2), Interval(1, 10), DROP, 1)
+        r4 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
+                  Interval(6, 10), Interval(1, 10), DROP, 1)
+        assert r1 - r2 == [r3, r4]
+ 
+    def test_sub5(self):
+        r1 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
+                  Interval(1, 10), Interval(1, 10), DROP, 1)
+        r2 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
+                  Interval(1, 10), Interval(3, 5), DROP, 1)
+
+        r3 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
+                  Interval(1, 10), Interval(1, 2), DROP, 1)
+        r4 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
+                  Interval(1, 10), Interval(6, 10), DROP, 1)
+        assert r1 - r2 == [r3, r4]
+ 
+
 class Rule1d(object):
     """ Sub of 1-dim-Rules
     """
@@ -569,50 +583,18 @@ class Rule3d(object):
         self.i1 = i1
         self.i2 = i2
         self.i3 = i3
-        self.x1 = i1.a
-        self.x2 = i1.b
-        self.y1 = i2.a
-        self.y2 = i2.b 
-        self.z1 = i3.a
-        self.z2 = i3.b
 
     def __repr__(self):
         return "3-dim-rule( %s, %s, %s )" %(self.i1, self.i2, self.i3)
 
     def __sub__(self, other):
-        X1 = self.x1
-        X2 = self.x2
-        Y1 = self.y1
-        Y2 = self.y2
-        Z1 = self.z1
-        Z2 = self.z2
 
-        x1 = other.x1
-        x2 = other.x2
-        y1 = other.y1
-        y2 = other.y2
-        z1 = other.z1
-        z2 = other.z2
+        return [ Rule3d(i, self.i2, self.i3) for i in (self.i1 - other.i1)] +\
+               [ Rule3d(other.i1, i, self.i3) for i in (self.i2 - other.i2)] +\
+               [ Rule3d(other.i1, other.i2, i) for i in (self.i3 - other.i3)]
 
-        # Left Block
-        b1 = Interval(X1, x1), Interval(Y1, Y2), Interval(Z1, Z2)
-        # Right Block
-        b2 = Interval(x2, X2), Interval(Y1, Y2), Interval(Z1, Z2)
-        # Top Block
-        b3 = Interval(x1, x2), Interval(y2, Y2), Interval(Z1, Z2)
-        # Bottom Block
-        b4 = Interval(x1, x2), Interval(Y1, y1), Interval(Z1, Z2)
-        # Back Block
-        b5 = Interval(x1, x2), Interval(y1, y2), Interval(z2, Z2)
-        # Front Block
-        b6 = Interval(x1, x2), Interval(y1, y2), Interval(Z1, z1)
-
-        return [ b1[0], b1[1], b1[2], \
-                 b2[0], b2[1], b2[2], \
-                 b3[0], b3[1], b3[2], \
-                 b4[0], b4[1], b4[2], \
-                 b5[0], b5[1], b5[2], \
-                 b6[0], b6[1], b6[2] ]
+    def __eq__(self, other):
+        return self.i1 == other.i1 and self.i2 == other.i2 and self.i3 == other.i3
 
 
 class TestRule1d(object):
@@ -658,22 +640,17 @@ class TestRule3d(object):
         r1 = Rule3d( Interval(1, 9), Interval(1, 9), Interval(1, 9) )
         r2 = Rule3d( Interval(4, 6), Interval(4, 6), Interval(4, 6) )
 
-        b1 = [ Interval(1, 4), Interval(1, 9), Interval(1, 9) ]
-        b2 = [ Interval(6, 9), Interval(1, 9), Interval(1, 9) ]
-        b3 = [ Interval(4, 6), Interval(6, 9), Interval(1, 9) ]
-        b4 = [ Interval(4, 6), Interval(1, 4), Interval(1, 9) ]
-        b5 = [ Interval(4, 6), Interval(4, 6), Interval(6, 9) ]
-        b6 = [ Interval(4, 6), Interval(4, 6), Interval(1, 4) ]
-
-        assert r1 - r2 == [ b1[0], b1[1], b1[2],\
-                            b2[0], b2[1], b2[2],\
-                            b3[0], b3[1], b3[2],\
-                            b4[0], b4[1], b4[2],\
-                            b5[0], b5[1], b5[2],\
-                            b6[0], b6[1], b6[2] ]
+        x1 = Rule3d(Interval(1, 3), Interval(1, 9), Interval(1, 9) )
+        x2 = Rule3d(Interval(7, 9), Interval(1, 9), Interval(1, 9) )
+        x3 = Rule3d(Interval(4, 6), Interval(1, 3), Interval(1, 9) )
+        x4 = Rule3d(Interval(4, 6), Interval(7, 9), Interval(1, 9) )
+        x5 = Rule3d(Interval(4, 6), Interval(4, 6), Interval(1, 3) )
+        x6 = Rule3d(Interval(4, 6), Interval(4, 6), Interval(7, 9) )
+        
+        assert r1 - r2 == [x1, x2, x3, x4, x5, x6]
 
 
-
+# ------------------------ MAIN ---------------------------------------------
 def check_args(a, b):
     """ Checks args, defining amount of pos. & neg. tests.
     """
@@ -714,10 +691,15 @@ def read_file():
     return lines, pos_tests, neg_tests
 
 def main():
-    r1 = Rule2d( Interval(1, 9), Interval(1, 9) )
-    r2 = Rule2d( Interval(6, 9), Interval(6, 9) )
+    r1 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
+                Interval(1, 10), Interval(1, 10), DROP, 1)
+    r2 = Rule(Interval(3, 5), Interval(3, 5), Interval(1, 10), \
+                Interval(1, 10), Interval(1, 10), DROP, 1)
+
+
     v = r1 - r2
-    print v
+    for r in v:
+        print r 
 
 if __name__ == '__main__': main()
 
