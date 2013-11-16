@@ -493,9 +493,296 @@ class TestRawRule(object):
         assert len(normalized_rules) == 32
 
 
+
+@skip
+def test_check_args():
+    assert check_args(0, 0) == (False, ERROR_STR2)
+    assert check_args(1, -1) == (False, ERROR_STR1)
+    assert check_args(50000, 10) == (False, ERROR_STR1)
+    assert check_args(10, 10) == (True, OK_STR)
+    assert check_args(0, 5) == (True, OK_STR)
+
+
+
 class TestRule(object):
 
-    def test_eq(self):
+    # Other contains Self : no identical borders
+    def test_other_contains_self_1(self):
+        I = Interval
+        r1 = Rule(I(3, 5), I(3, 5), I(3, 5), I(3, 5), I(3, 5), DROP, 1)
+        r2 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        assert r1 - r2 == []
+
+    # Other contains Self : some identical borders
+    def test_other_contains_self_2(self):
+        I = Interval
+        r1 = Rule(I(3, 5), I(3, 5), I(3, 5), I(3, 5), I(3, 5), DROP, 1)
+        r2 = Rule(I(3, 9), I(3, 9), I(1, 9), I(1, 5), I(1, 5), DROP, 1)
+        assert r1 - r2 == []
+
+    # Self has no intersection with Other
+    def test_no_intersection_3(self):
+        I = Interval
+        r1 = Rule(I(1, 5), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 1)
+        r2 = Rule(I(7, 9), I(7, 9), I(7, 9), I(7, 9), I(7, 9), DROP, 1)
+        assert r1 - r2 == [r1]
+
+
+    # Tests, where Self contains Other : 
+
+    # self, other differ in only 1 Dimension  (5 test-functions)
+    def test_self_contains_other_4(self):
+        I = Interval
+        r1 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r2 = Rule(I(3, 5), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+
+        r3 = Rule(I(1, 2), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r4 = Rule(I(6, 9), I(1, 9), I(1, 9),I(1, 9), I(1, 9), DROP, 1)
+        assert r1 - r2 == [r3, r4]
+
+    def test_self_contains_other_5(self):
+        I = Interval
+        r1 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r2 = Rule(I(1, 9), I(3, 5), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+
+        r3 = Rule(I(1, 9), I(1, 2), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r4 = Rule(I(1, 9), I(6, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        assert r1 - r2 == [r3, r4]
+
+    def test_self_contains_other_6(self):
+        I = Interval
+        r1 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r2 = Rule(I(1, 9), I(1, 9), I(3, 5), I(1, 9), I(1, 9), DROP, 1)
+
+        r3 = Rule(I(1, 9), I(1, 9), I(1, 2), I(1, 9), I(1, 9), DROP, 1)
+        r4 = Rule(I(1, 9), I(1, 9), I(6, 9), I(1, 9), I(1, 9), DROP, 1)
+        assert r1 - r2 == [r3, r4]
+ 
+    def test_self_contains_other_7(self):
+        I = Interval
+        r1 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r2 = Rule(I(1, 9), I(1, 9), I(1, 9), I(3, 5), I(1, 9), DROP, 1)
+
+        r3 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 2), I(1, 9), DROP, 1)
+        r4 = Rule(I(1, 9), I(1, 9), I(1, 9), I(6, 9), I(1, 9), DROP, 1)
+        assert r1 - r2 == [r3, r4]
+ 
+    def test_self_contains_other_8(self):
+        I = Interval
+        r1 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r2 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(3, 5), DROP, 1)
+
+        r3 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 2), DROP, 1)
+        r4 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(6, 9), DROP, 1)
+        assert r1 - r2 == [r3, r4]
+
+
+    # self, other differ in 2 Dimensions (4 Tests)
+    def test_self_contains_other_9(self):
+        I = Interval
+        r1 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r2 = Rule(I(3, 5), I(3, 5), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+
+        r3 = Rule(I(1, 2), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r4 = Rule(I(6, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r5 = Rule(I(3, 5), I(1, 2), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r6 = Rule(I(3, 5), I(6, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+
+        assert r1 - r2 == [r3, r4, r5, r6]
+
+    def test_self_contains_other_10(self):
+        I = Interval
+        r1 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r2 = Rule(I(1, 9), I(3, 5), I(3, 5), I(1, 9), I(1, 9), DROP, 1)
+
+        r3 = Rule(I(1, 9), I(1, 2), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r4 = Rule(I(1, 9), I(6, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r5 = Rule(I(1, 9), I(3, 5), I(1, 2), I(1, 9), I(1, 9), DROP, 1)
+        r6 = Rule(I(1, 9), I(3, 5), I(6, 9), I(1, 9), I(1, 9), DROP, 1)
+
+        assert r1 - r2 == [r3, r4, r5, r6]
+
+    def test_self_contains_other_11(self):
+        I = Interval
+        r1 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r2 = Rule(I(1, 9), I(1, 9), I(3, 5), I(3, 5), I(1, 9), DROP, 1)
+
+        r3 = Rule(I(1, 9), I(1, 9), I(1, 2), I(1, 9), I(1, 9), DROP, 1)
+        r4 = Rule(I(1, 9), I(1, 9), I(6, 9), I(1, 9), I(1, 9), DROP, 1)
+        r5 = Rule(I(1, 9), I(1, 9), I(3, 5), I(1, 2), I(1, 9), DROP, 1)
+        r6 = Rule(I(1, 9), I(1, 9), I(3, 5), I(6, 9), I(1, 9), DROP, 1)
+
+        assert r1 - r2 == [r3, r4, r5, r6]
+
+    def test_self_contains_other_12(self):
+        I = Interval
+        r1 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r2 = Rule(I(1, 9), I(1, 9), I(1, 9), I(3, 5), I(3, 5), DROP, 1)
+
+        r3 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 2), I(1, 9), DROP, 1)
+        r4 = Rule(I(1, 9), I(1, 9), I(1, 9), I(6, 9), I(1, 9), DROP, 1)
+        r5 = Rule(I(1, 9), I(1, 9), I(1, 9), I(3, 5), I(1, 2), DROP, 1)
+        r6 = Rule(I(1, 9), I(1, 9), I(1, 9), I(3, 5), I(6, 9), DROP, 1)
+
+        assert r1 - r2 == [r3, r4, r5, r6]
+
+    # self, other differ in 3 Dimensions (3 Tests)
+    def test_self_contains_other_13(self):
+        I = Interval
+        r1 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r2 = Rule(I(3, 5), I(3, 5), I(3, 5), I(1, 9), I(1, 9), DROP, 1)
+
+        r3 = Rule(I(1, 2), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r4 = Rule(I(6, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r5 = Rule(I(3, 5), I(1, 2), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r6 = Rule(I(3, 5), I(6, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r7 = Rule(I(3, 5), I(3, 5), I(1, 2), I(1, 9), I(1, 9), DROP, 1)
+        r8 = Rule(I(3, 5), I(3, 5), I(6, 9), I(1, 9), I(1, 9), DROP, 1)
+        assert r1 - r2 == [r3, r4, r5, r6, r7, r8]
+
+    def test_self_contains_other_11(self):
+        I = Interval
+        r1 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r2 = Rule(I(1, 9), I(3, 5), I(3, 5), I(3, 5), I(1, 9), DROP, 1)
+
+        r3 = Rule(I(1, 9), I(1, 2), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r4 = Rule(I(1, 9), I(6, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r5 = Rule(I(1, 9), I(3, 5), I(1, 2), I(1, 9), I(1, 9), DROP, 1)
+        r6 = Rule(I(1, 9), I(3, 5), I(6, 9), I(1, 9), I(1, 9), DROP, 1)
+        r7 = Rule(I(1, 9), I(3, 5), I(3, 5), I(1, 2), I(1, 9), DROP, 1)
+        r8 = Rule(I(1, 9), I(3, 5), I(3, 5), I(6, 9), I(1, 9), DROP, 1)
+        assert r1 - r2 == [r3, r4, r5, r6, r7, r8]
+
+    def test_self_contains_other_12(self):
+        I = Interval
+        r1 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r2 = Rule(I(1, 9), I(1, 9), I(3, 5), I(3, 5), I(3, 5), DROP, 1)
+
+        r3 = Rule(I(1, 9), I(1, 9), I(1, 2), I(1, 9), I(1, 9), DROP, 1)
+        r4 = Rule(I(1, 9), I(1, 9), I(6, 9), I(1, 9), I(1, 9), DROP, 1)
+        r5 = Rule(I(1, 9), I(1, 9), I(3, 5), I(1, 2), I(1, 9), DROP, 1)
+        r6 = Rule(I(1, 9), I(1, 9), I(3, 5), I(6, 9), I(1, 9), DROP, 1)
+        r7 = Rule(I(1, 9), I(1, 9), I(3, 5), I(3, 5), I(1, 2), DROP, 1)
+        r8 = Rule(I(1, 9), I(1, 9), I(3, 5), I(3, 5), I(6, 9), DROP, 1)
+        assert r1 - r2 == [r3, r4, r5, r6, r7, r8]
+
+    # self, other differ in 4 Dimensions (2 Tests)
+    def test_self_contains_other_13(self):
+        I = Interval
+        r1 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r2 = Rule(I(3, 5), I(3, 5), I(3, 5), I(3, 5), I(1, 9), DROP, 1)
+
+        r3 = Rule(I(1, 2), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r4 = Rule(I(6, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r5 = Rule(I(3, 5), I(1, 2), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r6 = Rule(I(3, 5), I(6, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r7 = Rule(I(3, 5), I(3, 5), I(1, 2), I(1, 9), I(1, 9), DROP, 1)
+        r8 = Rule(I(3, 5), I(3, 5), I(6, 9), I(1, 9), I(1, 9), DROP, 1)
+        r9 = Rule(I(3, 5), I(3, 5), I(3, 5), I(1, 2), I(1, 9), DROP, 1)
+        r10= Rule(I(3, 5), I(3, 5), I(3, 5), I(6, 9), I(1, 9), DROP, 1)
+
+        assert r1 - r2 == [r3, r4, r5, r6, r7, r8, r9, r10]
+
+    def test_self_contains_other_14(self):
+        I = Interval
+        r1 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r2 = Rule(I(1, 9), I(3, 5), I(3, 5), I(3, 5), I(3, 5), DROP, 1)
+
+        r3 = Rule(I(1, 9), I(1, 2), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r4 = Rule(I(1, 9), I(6, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r5 = Rule(I(1, 9), I(3, 5), I(1, 2), I(1, 9), I(1, 9), DROP, 1)
+        r6 = Rule(I(1, 9), I(3, 5), I(6, 9), I(1, 9), I(1, 9), DROP, 1)
+        r7 = Rule(I(1, 9), I(3, 5), I(3, 5), I(1, 2), I(1, 9), DROP, 1)
+        r8 = Rule(I(1, 9), I(3, 5), I(3, 5), I(6, 9), I(1, 9), DROP, 1)
+        r9 = Rule(I(1, 9), I(3, 5), I(3, 5), I(3, 5), I(1, 2), DROP, 1)
+        r10= Rule(I(1, 9), I(3, 5), I(3, 5), I(3, 5), I(6, 9), DROP, 1)
+
+        assert r1 - r2 == [r3, r4, r5, r6, r7, r8, r9, r10]
+
+
+    # self, other differ in 5 Dimensions (1 Test)
+    def test_self_contains_other_15(self):
+        I = Interval
+        r1 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r2 = Rule(I(3, 5), I(3, 5), I(3, 5), I(3, 5), I(3, 5), DROP, 1)
+
+        r3 = Rule(I(1, 2), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r4 = Rule(I(6, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r5 = Rule(I(3, 5), I(1, 2), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r6 = Rule(I(3, 5), I(6, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+        r7 = Rule(I(3, 5), I(3, 5), I(1, 2), I(1, 9), I(1, 9), DROP, 1)
+        r8 = Rule(I(3, 5), I(3, 5), I(6, 9), I(1, 9), I(1, 9), DROP, 1)
+        r9 = Rule(I(3, 5), I(3, 5), I(3, 5), I(1, 2), I(1, 9), DROP, 1)
+        r10= Rule(I(3, 5), I(3, 5), I(3, 5), I(6, 9), I(1, 9), DROP, 1)
+        r11= Rule(I(3, 5), I(3, 5), I(3, 5), I(3, 5), I(1, 2), DROP, 1)
+        r12= Rule(I(3, 5), I(3, 5), I(3, 5), I(3, 5), I(6, 9), DROP, 1)
+
+        assert r1 - r2 == [r3, r4, r5, r6, r7, r8, r9, r10, r11, r12]
+
+
+    # Tests, where Self and Other have an Intersection: 
+    # in each case we get exactly 5 Rules
+    def test_self_contains_other_16(self):
+        I = Interval
+        r1 = Rule(I(1, 6), I(1, 6), I(1, 6), I(1, 6), I(1, 6), DROP, 1)
+        r2 = Rule(I(4, 9), I(4, 9), I(4, 9), I(4, 9), I(4, 9), DROP, 1)
+
+        r3 = Rule(I(1, 3), I(1, 6), I(1, 6), I(1, 6), I(1, 6), DROP, 1)
+        r4 = Rule(I(4, 6), I(1, 3), I(1, 6), I(1, 6), I(1, 6), DROP, 1)
+        r5 = Rule(I(4, 6), I(4, 6), I(1, 3), I(1, 6), I(1, 6), DROP, 1)
+        r6 = Rule(I(4, 6), I(4, 6), I(4, 6), I(1, 3), I(1, 6), DROP, 1)
+        r7 = Rule(I(4, 6), I(4, 6), I(4, 6), I(4, 6), I(1, 3), DROP, 1)
+
+        assert r1 - r2 == [r3, r4, r5, r6, r7]
+
+    # Intersection in not all 5 Dimensions => No Intersection at all (4 Tests)
+    # Intersection in 1 Dimension
+    def test_self_contains_other_17(self):
+        I = Interval
+        r1 = Rule(I(1, 6), I(1, 6), I(1, 6), I(1, 6), I(1, 6), DROP, 1)
+        r2 = Rule(I(3, 9), I(7, 9), I(7, 9), I(7, 9), I(7, 9), DROP, 1)
+
+        assert r1 - r2 == [r1]
+    # Intersection in 2 Dimensions
+    def test_self_contains_other_18(self):
+        I = Interval
+        r1 = Rule(I(1, 6), I(1, 6), I(1, 6), I(1, 6), I(1, 6), DROP, 1)
+        r2 = Rule(I(3, 9), I(3, 9), I(7, 9), I(7, 9), I(7, 9), DROP, 1)
+
+        assert r1 - r2 == [r1]
+
+    # Intersection in 3 Dimensions
+    def test_self_contains_other_19(self):
+        I = Interval
+        r1 = Rule(I(1, 6), I(1, 6), I(1, 6), I(1, 6), I(1, 6), DROP, 1)
+        r2 = Rule(I(3, 9), I(3, 9), I(3, 9), I(7, 9), I(7, 9), DROP, 1)
+
+        assert r1 - r2 == [r1]
+
+    # Intersection in 4 Dimensions
+    def test_self_contains_other_20(self):
+        I = Interval
+        r1 = Rule(I(1, 6), I(1, 6), I(1, 6), I(1, 6), I(1, 6), DROP, 1)
+        r2 = Rule(I(3, 9), I(3, 9), I(3, 9), I(3, 9), I(7, 9), DROP, 1)
+
+        assert r1 - r2 == [r1]
+
+
+    def test_num_rules_21(self):
+        I = Interval
+        r1 = Rule(I(1, 5), I(2, 5), I(3, 3), I(4, 4), I(5, 5), DROP, 1)
+        r2 = Rule(I(2, 6), I(1, 3), I(3, 3), I(4, 4), I(5, 5), PASS, 2)
+
+        r3 = Rule(I(1, 2), I(1, 5), I(3, 3), I(4, 4), I(5, 5), DROP, 1)
+
+        diff = r2 - r1
+        assert len(diff) == 2
+        assert diff[0] == Rule(I(6, 6), I(1, 3), I(3, 3), I(4, 4), I(5, 5),
+                PASS, 2)
+        assert diff[1] == Rule(I(2, 5), I(1, 1), I(3, 3), I(4, 4), I(5, 5),
+                PASS, 2)
+
+    def test_eq_22(self):
         i1 = Interval(1, 2)
         i2 = Interval(3, 4)
         i3 = Interval(5, 6)
@@ -505,10 +792,4 @@ class TestRule(object):
         assert Rule(i1, i2, i3, i4, i5, 1000, PASS) == r1
         assert r1 != Rule(i1, i1, i1, i1, i1, 1000, DROP)
 
-@skip
-def test_check_args():
-    assert check_args(0, 0) == (False, ERROR_STR2)
-    assert check_args(1, -1) == (False, ERROR_STR1)
-    assert check_args(50000, 10) == (False, ERROR_STR1)
-    assert check_args(10, 10) == (True, OK_STR)
-    assert check_args(0, 5) == (True, OK_STR)
+

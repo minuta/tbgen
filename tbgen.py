@@ -10,6 +10,8 @@ skip = pytest.mark.skipif
 # + fix ALL broken tests
 # - implement method on class Rule __sub__ (plenty of tests!)
 # - refactor Error-Analysis 
+# -------------------------------------------------------------------
+
 
 # -------------- CONSTANTS --------------------------------------
 PASS = 1
@@ -37,7 +39,7 @@ ERROR_STR4 = 'Usage: python %s <Firewall-Rule-Set-File>' % argv[0] + ERROR_STR41
 
 ERROR_STR5 = 'Error : File doesn\'t exist or is empty!\n'
 ERROR_STR6 = 'Error : Invalid Rule Structure in Rule : '
-
+# --------------------------------------------------------------------
 
 # class Action(object):
 #     
@@ -462,7 +464,6 @@ class Rule(object):
         if len(i5_intersect) == 0:
             return [self]
 
-        # Self contains Other
         r1 = [ Rule(i, self.i2, self.i3, self.i4, self.i5,\
                self.action, self.rule_id) for i in (self.i1 - other.i1) ]
         r2 = [ Rule(i1_intersect[0], i, self.i3, self.i4, self.i5,\
@@ -474,107 +475,6 @@ class Rule(object):
         r5 = [ Rule(i1_intersect[0], i2_intersect[0], i3_intersect[0], i4_intersect[0], i,\
                self.action, self.rule_id) for i in (self.i5 - other.i5) ]
         return r1 + r2 + r3 + r4 + r5
-
-class TestRule(object):
-
-    def test_other_contains_self(self):
-        r2 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
-                  Interval(1, 10), Interval(1, 10), DROP, 1)
-        r1 = Rule(Interval(3, 5), Interval(3, 5), Interval(3, 5), \
-                  Interval(3, 5), Interval(3, 5), DROP, 1)
-        assert r1 - r2 == []
-
-    def test_no_intersection(self):
-        r1 = Rule(Interval(1, 5), Interval(1, 5), Interval(1, 5), \
-                  Interval(1, 5), Interval(1, 5), DROP, 1)
-        r2 = Rule(Interval(7, 9), Interval(7, 9), Interval(7, 9), \
-                  Interval(7, 9), Interval(7, 9), DROP, 1)
-        assert r1 - r2 == [r1]
-
-
-    # Tests, where Self contains Other : 
-    def test_self_contains_other1(self):
-        r1 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
-                  Interval(1, 10), Interval(1, 10), DROP, 1)
-        r2 = Rule(Interval(3, 5), Interval(1, 10), Interval(1, 10), \
-                  Interval(1, 10), Interval(1, 10), DROP, 1)
-
-        r3 = Rule(Interval(1, 2), Interval(1, 10), Interval(1, 10), \
-                  Interval(1, 10), Interval(1, 10), DROP, 1)
-        r4 = Rule(Interval(6, 10), Interval(1, 10), Interval(1, 10), \
-                  Interval(1, 10), Interval(1, 10), DROP, 1)
-        assert r1 - r2 == [r3, r4]
-
-    def test_self_contains_other2(self):
-        r1 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
-                  Interval(1, 10), Interval(1, 10), DROP, 1)
-        r2 = Rule(Interval(1, 10), Interval(3, 5), Interval(1, 10), \
-                  Interval(1, 10), Interval(1, 10), DROP, 1)
-
-        r3 = Rule(Interval(1, 10), Interval(1, 2), Interval(1, 10), \
-                  Interval(1, 10), Interval(1, 10), DROP, 1)
-        r4 = Rule(Interval(1, 10), Interval(6, 10), Interval(1, 10), \
-                  Interval(1, 10), Interval(1, 10), DROP, 1)
-        assert r1 - r2 == [r3, r4]
-
-    def test_self_contains_other3(self):
-        r1 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
-                  Interval(1, 10), Interval(1, 10), DROP, 1)
-        r2 = Rule(Interval(1, 10), Interval(1, 10), Interval(3, 5), \
-                  Interval(1, 10), Interval(1, 10), DROP, 1)
-
-        r3 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 2), \
-                  Interval(1, 10), Interval(1, 10), DROP, 1)
-        r4 = Rule(Interval(1, 10), Interval(1, 10), Interval(6, 10), \
-                  Interval(1, 10), Interval(1, 10), DROP, 1)
-        assert r1 - r2 == [r3, r4]
- 
-    def test_self_contains_other4(self):
-        r1 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
-                  Interval(1, 10), Interval(1, 10), DROP, 1)
-        r2 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
-                  Interval(3, 5), Interval(1, 10), DROP, 1)
-
-        r3 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
-                  Interval(1, 2), Interval(1, 10), DROP, 1)
-        r4 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
-                  Interval(6, 10), Interval(1, 10), DROP, 1)
-        assert r1 - r2 == [r3, r4]
- 
-    def test_self_contains_other5(self):
-        r1 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
-                  Interval(1, 10), Interval(1, 10), DROP, 1)
-        r2 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
-                  Interval(1, 10), Interval(3, 5), DROP, 1)
-
-        r3 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
-                  Interval(1, 10), Interval(1, 2), DROP, 1)
-        r4 = Rule(Interval(1, 10), Interval(1, 10), Interval(1, 10), \
-                  Interval(1, 10), Interval(6, 10), DROP, 1)
-        assert r1 - r2 == [r3, r4]
-
-    # TODO : More Tests with 2, 3, 4, 5 Dimensions, which differ between self and other
-    # ...................
-
-
-
-
-
-    # Tests, where Self and Other have an Intersection
-    # TODO make this test pass
-    def test_num_rules(self):
-        I = Interval
-        r1 = Rule(I(1, 5), I(2, 5), I(3, 3), I(4, 4), I(5, 5), DROP, 1)
-        r2 = Rule(I(2, 6), I(1, 3), I(3, 3), I(4, 4), I(5, 5), PASS, 2)
-
-        r3 = Rule(I(1, 2), I(1, 5), I(3, 3), I(4, 4), I(5, 5), DROP, 1)
-
-        diff = r2 - r1
-        assert len(diff) == 2
-        assert diff[0] == Rule(I(6, 6), I(1, 3), I(3, 3), I(4, 4), I(5, 5),
-                PASS, 2)
-        assert diff[1] == Rule(I(2, 5), I(1, 1), I(3, 3), I(4, 4), I(5, 5),
-                PASS, 2)
 
 # ------------------------ MAIN ---------------------------------------------
 def check_args(a, b):
@@ -624,7 +524,6 @@ def read_file():
 
 def main():
     lines, pos, neg = read_file()
-
     
 if __name__ == '__main__': main()
 
