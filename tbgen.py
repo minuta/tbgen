@@ -58,14 +58,10 @@ ERROR_STR6 = 'Error : Invalid Rule Structure in Rule : '
 class Interval(object):
 
     def __init__(self, a, b):
-#         self.range_min = 1
-#         self.range_max = 20
         self.a = a
         self.b = b
 
     def __repr__(self):
-#         if self == []:
-#             return '[]'
         return '[%s : %s]' %(self.a, self.b)
 
     def __eq__(self, other):
@@ -89,9 +85,6 @@ class Interval(object):
             return self[0].dif(other)
         return self.dif(other)
 
-#     def sub(self, other):
-#         if isinstance(self, list):
-#             for i in self:
     def __add__(self, other):
         return self.union(other)
 

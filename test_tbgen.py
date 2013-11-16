@@ -5,12 +5,6 @@ import pytest
 
 skip = pytest.mark.skipif
 
-# def test_is_empty():
-#     a = Interval(1, 5)
-#     x = a - a
-#     assert x.is_empty()
-#     y = Interval(4,4)
-#     assert not y.is_empty()
 
 class TestInterval(object):
 
@@ -93,7 +87,6 @@ class TestInterval(object):
         y = Interval(3, 3)
         assert x - y == [x]
 
-# FIXME: Result is always a List!
         # subtract two identical interval
         i1 = Interval(1, 2)
         assert i1 - i1 == []
@@ -232,38 +225,23 @@ class TestInterval(object):
 
         x = Interval(10, 10)
         assert x.negate(0, 20) == [Interval(0, 9), Interval(11, 20)]
+        
+        assert x.negate(10, 30) == [Interval(11, 30)]
 
-    @skip
-    def test_empty_Intervals():
-        x = []
-        y = Interval(4, 8)
-        assert x.has_intersection(x)
-        assert x.has_identical_borders(x)
-        assert y - x == [y]
-        assert x - y == [x]
-        assert x - x == [x]
-        assert x.is_subinterval(x)
-        assert x + y == [y]
-        assert x.intersect(y) == y.intersect(x) == []
-        assert x.negate() == [Interval(x.range_min, x.range_max)]
-
-    @skip
-    def test_sub():         # see test_dif() for more
+    def test_sub(self):         # see test_dif() for more
         x = Interval(1, 10)
         y = Interval(5, 10)
         z = Interval(8, 10)
         w = Interval(6, 8)
         assert (x - y) == [Interval(1, 4)]
-        assert (x - z - w) == [Interval(1, 5)]
         assert (x - w) == [Interval(1, 5), Interval(9, 10)]
 
-    @skip
-    def test_add():         # see test_union() for more
+    def test_add(self):         # see test_union() for more
         x = Interval(1, 5)
         y = Interval(3, 9)
         z = Interval(10, 15)
-        assert x + y ==  x + y + x == Interval(1, 9)
-        assert x + y + z == (Interval(1, 9), Interval(10, 15))
+        assert x + y ==  y + x  == [Interval(1, 9)]
+        assert x + z == [x, z]
 
 
 class TestIntervalList(object):
@@ -491,7 +469,6 @@ class TestRawRule(object):
                 True, 1)
         normalized_rules = raw_rule.normalize()
         assert len(normalized_rules) == 32
-
 
 
 @skip
