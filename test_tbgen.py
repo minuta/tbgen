@@ -1,7 +1,7 @@
-from tbgen import Interval, IntervalList, Parser, RawRule, Rule, PASS, DROP
-# from interval import Interval, IntervalList
-import os
-import pytest
+from tbgen import Tools, Interval, IntervalList, Parser, RawRule,\
+        Rule, PASS, DROP, OK_STR, ERROR_STR1, ERROR_STR2,ERROR_STR3,\
+        ERROR_STR4, ERROR_STR5, ERROR_STR7, NMIN, NMAX
+import os, errno, pytest
 
 skip = pytest.mark.skipif
 
@@ -471,16 +471,6 @@ class TestRawRule(object):
         assert len(normalized_rules) == 32
 
 
-@skip
-def test_check_args():
-    assert check_args(0, 0) == (False, ERROR_STR2)
-    assert check_args(1, -1) == (False, ERROR_STR1)
-    assert check_args(50000, 10) == (False, ERROR_STR1)
-    assert check_args(10, 10) == (True, OK_STR)
-    assert check_args(0, 5) == (True, OK_STR)
-
-
-
 class TestRule(object):
 
     # Other contains Self : no identical borders
@@ -768,5 +758,61 @@ class TestRule(object):
         r1 = Rule(i1, i2, i3, i4, i5, 1000, PASS)
         assert Rule(i1, i2, i3, i4, i5, 1000, PASS) == r1
         assert r1 != Rule(i1, i1, i1, i1, i1, 1000, DROP)
+
+
+class TestTools(object):
+
+    def test_check_nums_of_tests(self):
+        T = Tools()
+        allowed = NMIN + 1
+        assert T.check_nums_of_tests(allowed, allowed) == (True, OK_STR)
+        assert T.check_nums_of_tests(NMAX + 1, NMAX + 1) == (False, ERROR_STR1)
+        assert T.check_nums_of_tests(NMIN - 1, NMIN - 1) == (False, ERROR_STR1)
+
+        assert T.check_nums_of_tests(NMIN, allowed) == (True, OK_STR)
+        assert T.check_nums_of_tests(allowed, NMIN) == (True, OK_STR)
+
+        assert T.check_nums_of_tests(allowed, NMIN - 1) == (False, ERROR_STR1)
+        assert T.check_nums_of_tests(NMAX + 1, allowed) == (False, ERROR_STR1)
+        assert T.check_nums_of_tests(allowed, NMAX + 1) == (False, ERROR_STR1)
+
+        assert T.check_nums_of_tests(NMIN, NMIN) == (False, ERROR_STR2)
+
+    def test_check_args(self):
+        T = Tools()
+        prog_name = 'tbgen.py'
+        ruleset = 'test_rules.txt'  # should exist and be non-empty for this test!
+        ok = 'ok'
+
+        # valid args
+        args = [prog_name, ruleset, '10', '10']
+        assert T.check_args(args) == (ok, None, ruleset, 10, 10)
+
+        # too many args 
+        args = [prog_name, ruleset, '10', '10', '3']
+        assert T.check_args(args) == (ERROR_STR3 + ERROR_STR4, errno.EINVAL, None, 0, 0)
+
+        # too few args
+        args = [prog_name, ruleset, '10']
+        assert T.check_args(args) == (ERROR_STR3 + ERROR_STR4, errno.EINVAL, None, 0, 0)
+
+        # num-test-args are not numbers
+        args = [prog_name, ruleset, 'a', 'b']
+        assert T.check_args(args) == (ERROR_STR7 + ERROR_STR4, errno.EINVAL, ruleset, 0, 0)
+
+        # Intergration with check_nums_of_tests()
+        pos, neg = ['1000000', '12']
+        args = [prog_name, ruleset, pos, neg]
+        ok, m = T.check_nums_of_tests(int(pos), int(neg))
+        assert T.check_args(args) == (m, errno.EINVAL, ruleset, int(pos), int(neg))
+
+
+
+
+        # File doesn't exist or is empty
+        ruleset = 'foo_ruleset'
+        args = [prog_name, ruleset, '10', '10']
+        assert T.check_args(args) == (ERROR_STR5, errno.ENOENT, ruleset, 10, 10)
+
 
 

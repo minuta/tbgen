@@ -39,6 +39,7 @@ ERROR_STR4 = 'Usage: python %s <Firewall-Rule-Set-File>' % argv[0] + ERROR_STR41
 
 ERROR_STR5 = 'Error : File doesn\'t exist or is empty!\n'
 ERROR_STR6 = 'Error : Invalid Rule Structure in Rule : '
+ERROR_STR7 = "Error : Wrong argument type!\n" 
 # --------------------------------------------------------------------
 
 # class Action(object):
@@ -469,54 +470,67 @@ class Rule(object):
                self.action, self.rule_id) for i in (self.i5 - other.i5) ]
         return r1 + r2 + r3 + r4 + r5
 
-# ------------------------ MAIN ---------------------------------------------
-def check_args(a, b):
-    """ Checks args, defining amount of pos. & neg. tests.
-    """
-    r = True
-    message = OK_STR
-    trange = range(NMIN, NMAX)
-    if a == b == 0:
-        message = ERROR_STR2
-        r = False
-    if a not in trange or b not in trange:
-        message = ERROR_STR1
-        r = False
-    return r, message
+class Tools(object):
 
-def print_error_and_exit(message, error_num):
-    print message
-    exit(error_num)
+    def check_nums_of_tests(self, a, b):
+        """ Checks args, defining amount of pos. & neg. tests.  """
+        r = True
+        message = OK_STR
+        trange = range(NMIN, NMAX)
+        if a == b == 0:
+            message = ERROR_STR2
+            r = False
+        if a not in trange or b not in trange:
+            message = ERROR_STR1
+            r = False
+        return r, message
 
+    def print_error_and_exit(self, message, error_num):
+        print message
+        exit(error_num)
 
-def read_file():
-    """ Reads a given file, num of pos. & neg. tests from promt.
-        Returns Stringlines, num of pos. & neg. tests
-    """ 
-    if len(argv) == 4:
-        fname = argv[1]
+    def check_args(self, argv):
+        message = 'ok'
+        error = None
+        fname = None
+        pos_tests = 0
+        neg_tests = 0
 
-        if not argv[2].isdigit() or not argv[3].isdigit():
-            print_error_and_exit("Error : Wrong argument type!\n" + \
-                    ERROR_STR4, errno.EINVAL)
+        if len(argv) == 4:
+            fname = argv[1]
 
-        pos_tests = int(argv[2])
-        neg_tests = int(argv[3])
+            if not argv[2].isdigit() or not argv[3].isdigit():
+                message = ERROR_STR7 + ERROR_STR4
+                error = errno.EINVAL
+            else:
+                pos_tests = int(argv[2])
+                neg_tests = int(argv[3])
 
-        ok, message = check_args(pos_tests, neg_tests)
-        if ok != True:
-            print_error_and_exit(message, errno.EINVAL)
-        if os.path.exists(fname) and os.stat(fname).st_size != 0:
-            with open(fname) as f:
-                lines = f.readlines()
+                ok, message2 = self.check_nums_of_tests(pos_tests, neg_tests)
+                if ok != True:
+                    message = message2
+                    error = errno.EINVAL
+                if not (os.path.exists(fname) and os.stat(fname).st_size != 0):
+                    message = ERROR_STR5
+                    error = errno.ENOENT
         else:
-            print_error_and_exit(ERROR_STR5, errno.ENOENT)
-    else:
-        print_error_and_exit(ERROR_STR3 + ERROR_STR4, errno.EINVAL)
-    return lines, pos_tests, neg_tests
+            message = ERROR_STR3 + ERROR_STR4
+            error = errno.EINVAL
+        return message, error, fname, pos_tests, neg_tests
 
+
+# ------------------------ MAIN ---------------------------------------------
 def main():
-    lines, pos, neg = read_file()
+    T = Tools()
+    message, error, fname, pos, neg = T.check_args(argv)
+
+    if message == 'ok':
+        with open(fname) as f:
+            lines = f.readlines()
+    else:
+        T.print_error_and_exit(message, error)
+
+    print lines
     
 if __name__ == '__main__': main()
 
