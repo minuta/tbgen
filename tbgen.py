@@ -5,11 +5,9 @@ import os, pytest, errno
 skip = pytest.mark.skipif
 
 # ------------------- TODO ------------------------------------------
-# + NO magic numbers!
-# + do error checking in parser and test it
-# + fix ALL broken tests
-# - implement method on class Rule __sub__ (plenty of tests!)
-# - refactor Error-Analysis 
+# - fix ALL broken tests
+# + implement method on class Rule __sub__ (plenty of tests!)
+# + refactor Error-Analysis 
 # -------------------------------------------------------------------
 
 
@@ -29,7 +27,7 @@ MAX_PROT = int(2 ** 8 - 1)
 
 NMIN = 0          # Minimal number of tests
 NMAX = 1000       # Maximal number of tests
-OK_STR = 'ok'
+OK = 'ok'
 ERROR_STR1 = "Error : some args are not in allowed range (%i, %i)" %(NMIN, NMAX)
 ERROR_STR2 = 'Error : you haven\'t specified any valid number of tests...'
 ERROR_STR3 = "Error : Invalid args!\n"
@@ -215,16 +213,21 @@ class Parser(object):
     def parse(self):
         file_lines = self.lines
         rules = []
+        error = ''
+        message = OK
+#         T = Tools()
         for rule_id, line in enumerate(file_lines):
             parts = line.split()
             if len(parts) != 10:
-                print_error_and_exit(ERROR_STR6 + str(rule_id), errno.EINVAL )
+                message = ERROR_STR6 + str(rule_id)
+                error = errno.EINVAL 
+                return message, error, rules
             no_negs_list, negs = self.check_negs(parts)
 
             args = self.fields_to_intervals(no_negs_list, rule_id) +\
                     negs + list(str(rule_id))
             rules.append(RawRule(*args))
-        return rules
+        return message, error, rules
 
 
     def check_negs(self, parts):
@@ -475,7 +478,7 @@ class Tools(object):
     def check_nums_of_tests(self, a, b):
         """ Checks args, defining amount of pos. & neg. tests.  """
         r = True
-        message = OK_STR
+        message = OK
         trange = range(NMIN, NMAX)
         if a == b == 0:
             message = ERROR_STR2
@@ -490,7 +493,7 @@ class Tools(object):
         exit(error_num)
 
     def check_args(self, argv):
-        message = 'ok'
+        message = OK
         error = None
         fname = None
         pos_tests = 0
@@ -524,14 +527,20 @@ def main():
     T = Tools()
     message, error, fname, pos, neg = T.check_args(argv)
 
-    if message == 'ok':
+    if message == OK:
         with open(fname) as f:
             lines = f.readlines()
     else:
         T.print_error_and_exit(message, error)
-
-    print lines
     
+    P = Parser(lines) 
+    message, error, lines = P.parse()
+    if message == OK:
+        for l in lines:
+            print l
+    else:
+        T.print_error_and_exit(message, error)
+
 if __name__ == '__main__': main()
 
 

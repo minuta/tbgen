@@ -1,6 +1,6 @@
 from tbgen import Tools, Interval, IntervalList, Parser, RawRule,\
-        Rule, PASS, DROP, OK_STR, ERROR_STR1, ERROR_STR2,ERROR_STR3,\
-        ERROR_STR4, ERROR_STR5, ERROR_STR7, NMIN, NMAX
+        Rule, PASS, DROP, ERROR_STR1, ERROR_STR2,ERROR_STR3,\
+        ERROR_STR4, ERROR_STR5, ERROR_STR7, OK, NMIN, NMAX
 import os, errno, pytest
 
 skip = pytest.mark.skipif
@@ -284,9 +284,6 @@ class TestIntervalList(object):
 
         assert a + q == IntervalList([Interval(1, 10), Interval(5, 12)])
         assert a + c == IntervalList([Interval(1, 10), Interval(1, 12)])
-#     assert a + b == IntervalList([Interval(1, 10), Interval(8, 12),\
-#             Interval(14, 16), Interval(20, 30)])
-#     assert a + b == IntervalList([Interval()])
 
     def test_check_eq(self):
         # check Equality of IntervalList with permutated contetnt
@@ -316,10 +313,9 @@ class TestIntervalList(object):
                 Interval(5, 5), Interval(9, 10)])
 
 
-@skip
 class TestParser():
 
-    p = Parser('test_rules.txt')
+    p = Parser('in this case not important string')
     TESTFILE = "abc.txt"
 
     def teardown_method(self, method):
@@ -357,7 +353,7 @@ class TestParser():
         f = ['192.151.11.17/32', '15.0.120.4/32',\
                            '10', ':', '655', '1221', ':', '1221',\
                            '0x06/0xff', 'DROP'] 
-        assert self.p.fields_to_intervals(f) ==\
+        assert self.p.fields_to_intervals(f, '1') ==\
                 [ Interval(3231124241, 3231124241),\
                   Interval(251688964, 251688964), Interval(10, 655),\
                   Interval(1221, 1221), Interval(6, 6), DROP ]
@@ -366,20 +362,17 @@ class TestParser():
         rule = """192.151.11.17/32 15.0.120.4/32 10 : 655 1221 : 1221\
                 0x06/0xff DROP"""
         parts = rule.split()
-        assert self.p.get_fields(parts) == [ [192, 151, 11, 17, 32],
+        assert self.p.get_fields(parts, '1') == [ [192, 151, 11, 17, 32],
                                             [15, 0, 120, 4, 32],
                                             [10, 655],
                                             [1221, 1221],
                                             [6, 255],
                                             DROP ]
 
-    def test_read_file(self):
-        fname = 'test_rules.txt'
-        s1 = '!192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 0x06/0xff DROP\n'
-        s2 = '192.151.11.17/0 15.0.120.4/24 1 : 100 1221 : 1221 0x06/0xff PASS\n'
-        assert self.p.read_file() == [s1, s2]
 
     def test_parse(self):
+        lines = ["!192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 0x06/0xff DROP"]
+        P = Parser(lines)
         sh = Interval(3231124241, 3231124241)
         dh = Interval(251688964, 251688964)
         sp = Interval(10, 655) 
@@ -388,11 +381,12 @@ class TestParser():
         r_id = '0'
         action = DROP
         neg = [1, 0, 1, 0, 0]
-
+        
         r1 = RawRule(sh, dh, sp, dp, prot, action, neg[0], neg[1],\
                 neg[2], neg[3], neg[4], r_id)
 
-        assert self.p.parse()[0] == r1
+#         message, error, lines = P.parse()
+        assert P.parse() == (OK, '', [r1])
 
     def test_protocol_to_interval(self):
         assert self.p.protocol_to_interval([6, 255]) == Interval(6, 6)
@@ -412,14 +406,13 @@ class TestParser():
         f3 = [24, 102, 18, 97, 17]
         assert self.p.subnet_to_interval(f3) == Interval(409337856, 409370623)
 
-    @skip
-    def test_broken_input_for_parser(self):
-        src = "oawdasiduasiodaspodipoasd"
-        with open(self.TESTFILE, "w") as f:
-            f.write(src)
-        p = Parser(self.TESTFILE)
-        with py.test.raises(ParseError) as e:
-            p.parse()
+#     def test_broken_input_for_parser(self):
+#         lines = ["oawdasiduasiodaspodipoasd"]
+#         with open(self.TESTFILE, "w") as f:
+#             f.write(src)
+#         P = Parser(lines)
+#         with pytest.raises(ParseError) as e:
+#             P.parse()
 
 
 class TestRawRule(object):
@@ -765,12 +758,12 @@ class TestTools(object):
     def test_check_nums_of_tests(self):
         T = Tools()
         allowed = NMIN + 1
-        assert T.check_nums_of_tests(allowed, allowed) == (True, OK_STR)
+        assert T.check_nums_of_tests(allowed, allowed) == (True, OK)
         assert T.check_nums_of_tests(NMAX + 1, NMAX + 1) == (False, ERROR_STR1)
         assert T.check_nums_of_tests(NMIN - 1, NMIN - 1) == (False, ERROR_STR1)
 
-        assert T.check_nums_of_tests(NMIN, allowed) == (True, OK_STR)
-        assert T.check_nums_of_tests(allowed, NMIN) == (True, OK_STR)
+        assert T.check_nums_of_tests(NMIN, allowed) == (True, OK)
+        assert T.check_nums_of_tests(allowed, NMIN) == (True, OK)
 
         assert T.check_nums_of_tests(allowed, NMIN - 1) == (False, ERROR_STR1)
         assert T.check_nums_of_tests(NMAX + 1, allowed) == (False, ERROR_STR1)
