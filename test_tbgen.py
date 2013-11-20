@@ -406,14 +406,6 @@ class TestParser():
         f3 = [24, 102, 18, 97, 17]
         assert self.p.subnet_to_interval(f3) == Interval(409337856, 409370623)
 
-#     def test_broken_input_for_parser(self):
-#         lines = ["oawdasiduasiodaspodipoasd"]
-#         with open(self.TESTFILE, "w") as f:
-#             f.write(src)
-#         P = Parser(lines)
-#         with pytest.raises(ParseError) as e:
-#             P.parse()
-
 
 class TestRawRule(object):
 

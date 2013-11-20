@@ -4,13 +4,6 @@ import os, pytest, errno
 
 skip = pytest.mark.skipif
 
-# ------------------- TODO ------------------------------------------
-# + fix ALL broken tests
-# + implement method on class Rule __sub__ (plenty of tests!)
-# + refactor Error-Analysis
-# -------------------------------------------------------------------
-
-
 # -------------- CONSTANTS --------------------------------------
 PASS = 1
 DROP = 2
@@ -38,6 +31,7 @@ ERROR_STR4 = 'Usage: python %s <Firewall-Rule-Set-File>' % argv[0] + ERROR_STR41
 ERROR_STR5 = 'Error : File doesn\'t exist or is empty!\n'
 ERROR_STR6 = 'Error : Invalid Rule Structure in Rule : '
 ERROR_STR7 = "Error : Wrong argument type!\n" 
+
 # --------------------------------------------------------------------
 
 # class Action(object):
@@ -51,8 +45,6 @@ ERROR_STR7 = "Error : Wrong argument type!\n"
 #     def __ne__(self, other):
 #         return not self == other
 
-# Class Interval
-# 
 
 class Interval(object):
 
@@ -423,7 +415,6 @@ class Rule(object):
         self.action = action
         self.rule_id = rule_id
 
-
     def __eq__(self, other):
         return  self.i1 == other.i1\
             and self.i2 == other.i2\
@@ -472,12 +463,6 @@ class Rule(object):
         r5 = [ Rule(i1_intersect[0], i2_intersect[0], i3_intersect[0], i4_intersect[0], i,\
                self.action, self.rule_id) for i in (self.i5 - other.i5) ]
         return r1 + r2 + r3 + r4 + r5
-
-#     def bunch_sub(self, other):
-#         """ Subtraction of a rule with a set of other rules. 
-#             As output we get a list like [ [r-r1], [r - r2], ... , [r - rn] ]
-#         """
-#         return [self - rule for rule in other]
 
     
 class Tools(object):
@@ -539,7 +524,7 @@ class Tools(object):
         if index > 0:
             return_set = [rset[index]]
             for i in rset[:index]:
-                return_set = [rule - i for rule in return_set if rule - i][0]
+                return_set = filter(None, [rule - i for rule in return_set])[0]
             return return_set
         else:
             return [rset[0]]
@@ -570,18 +555,4 @@ def main():
 
 if __name__ == '__main__': main()
 
-
-# def test_bunch_sub():
-#     I = Interval
-#     r1 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 0)
-#     r2 = Rule(I(3, 5), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
-#     r3 = Rule(I(10, 15), I(10, 15), I(10, 15), I(10, 15), I(10, 115), DROP, 2)
-#     r4 = Rule(I(1, 9), I(3, 5), I(1, 9), I(1, 9), I(1, 9), DROP, 3)
-# 
-#     v1 = Rule(I(1, 2), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 0)
-#     v2 = Rule(I(6, 9), I(1, 9), I(1, 9),I(1, 9), I(1, 9), DROP, 0)
-#     v3 = Rule(I(1, 9), I(1, 2), I(1, 9), I(1, 9), I(1, 9), DROP, 0)
-#     v4 = Rule(I(1, 9), I(6, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 0)
-#        
-#     assert r1.bunch_sub([r2, r3, r4]) == [[v1, v2], [r1], [v3, v4]]
 
