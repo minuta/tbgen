@@ -2,47 +2,48 @@
 
 	<rule id="0">
 		<packet id="0">
-    		<src_addr value="100000" />
-			<dst_addr value="200000" />
-			<src_port value="1" />
-			<dst_port value="2" />
-			<protocol value="15" />
-			<action value="PASS" />
-            <match value="TRUE" />
+            <src_addr> 100000 </src_addr>
+            <dst_addr> 200000 </dst_addr>
+            <src_port> 1 </src_port>
+            <dst_port> 2 </dst_port>
+            <protocol> 15 </protocol>
+            <action> PASS </action>
+            <match> TRUE </match>
 		</packet>
 
-        <packet id="1">
-    		<src_addr value="110000" />
-			<dst_addr value="220000" />
-			<src_port value="11" />
-			<dst_port value="22" />
-			<protocol value="15" />
-			<action value="PASS" />
-            <match value="TRUE" />
+    	<packet id="1">
+            <src_addr> 110000 </src_addr>
+            <dst_addr> 220000 </dst_addr>
+            <src_port> 11 </src_port>
+            <dst_port> 22 </dst_port>
+            <protocol> 15 </protocol>
+            <action> PASS </action>
+            <match> TRUE </match>
 		</packet>
+
 	</rule>
 
 	<rule id="1">
-		<packet id="0">
-    		<src_addr value="100000" />
-			<dst_addr value="200000" />
-			<src_port value="1" />
-			<dst_port value="2" />
-			<protocol value="15" />
-			<action value="PASS" />
-            <match value="TRUE" />
+    	<packet id="0">
+            <src_addr> 100000 </src_addr>
+            <dst_addr> 200000 </dst_addr>
+            <src_port> 1 </src_port>
+            <dst_port> 2 </dst_port>
+            <protocol> 15 </protocol>
+            <action> PASS </action>
+            <match> TRUE </match>
 		</packet>
 
-        <packet id="1">
-    		<src_addr value="110000" />
-			<dst_addr value="220000" />
-			<src_port value="11" />
-			<dst_port value="22" />
-			<protocol value="15" />
-			<action value="PASS" />
-            <match value="TRUE" />
-        </packet>
-    </rule>
+    	<packet id="1">
+            <src_addr> 110000 </src_addr>
+            <dst_addr> 220000 </dst_addr>
+            <src_port> 11 </src_port>
+            <dst_port> 22 </dst_port>
+            <protocol> 15 </protocol>
+            <action> PASS </action>
+            <match> TRUE </match>
+		</packet>
 
+    </rule>
 
 </tests>
