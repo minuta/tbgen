@@ -5,9 +5,9 @@ import os, pytest, errno
 skip = pytest.mark.skipif
 
 # ------------------- TODO ------------------------------------------
-# - fix ALL broken tests
+# + fix ALL broken tests
 # + implement method on class Rule __sub__ (plenty of tests!)
-# + refactor Error-Analysis 
+# + refactor Error-Analysis
 # -------------------------------------------------------------------
 
 
@@ -473,6 +473,13 @@ class Rule(object):
                self.action, self.rule_id) for i in (self.i5 - other.i5) ]
         return r1 + r2 + r3 + r4 + r5
 
+#     def bunch_sub(self, other):
+#         """ Subtraction of a rule with a set of other rules. 
+#             As output we get a list like [ [r-r1], [r - r2], ... , [r - rn] ]
+#         """
+#         return [self - rule for rule in other]
+
+    
 class Tools(object):
 
     def check_nums_of_tests(self, a, b):
@@ -521,6 +528,22 @@ class Tools(object):
             error = errno.EINVAL
         return message, error, fname, pos_tests, neg_tests
 
+    def dif(self, index, rset):
+        """ Difference of a rule at given index "index" in rset with rules of rset 
+            between index 0 and "index".
+            As output we get an unnested list of rules like :
+            [... [[[r-r1]-r2]-r3]-... - rn]
+            where r is a rule at index "index" and
+            r1 .. rn are rules between index 0 and index "index"
+        """
+        if index > 0:
+            return_set = [rset[index]]
+            for i in rset[:index]:
+                return_set = [rule - i for rule in return_set if rule - i][0]
+            return return_set
+        else:
+            return [rset[0]]
+
 
 # ------------------------ MAIN ---------------------------------------------
 def main():
@@ -536,11 +559,29 @@ def main():
     P = Parser(lines) 
     message, error, lines = P.parse()
     if message == OK:
-        for l in lines:
-            print l
+        norm_rules = [l.normalize() for l in lines]
     else:
         T.print_error_and_exit(message, error)
+    
+    print "Normalized Rules : \n"
+    for i in norm_rules:
+        print i
+
 
 if __name__ == '__main__': main()
 
+
+# def test_bunch_sub():
+#     I = Interval
+#     r1 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 0)
+#     r2 = Rule(I(3, 5), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+#     r3 = Rule(I(10, 15), I(10, 15), I(10, 15), I(10, 15), I(10, 115), DROP, 2)
+#     r4 = Rule(I(1, 9), I(3, 5), I(1, 9), I(1, 9), I(1, 9), DROP, 3)
+# 
+#     v1 = Rule(I(1, 2), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 0)
+#     v2 = Rule(I(6, 9), I(1, 9), I(1, 9),I(1, 9), I(1, 9), DROP, 0)
+#     v3 = Rule(I(1, 9), I(1, 2), I(1, 9), I(1, 9), I(1, 9), DROP, 0)
+#     v4 = Rule(I(1, 9), I(6, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 0)
+#        
+#     assert r1.bunch_sub([r2, r3, r4]) == [[v1, v2], [r1], [v3, v4]]
 

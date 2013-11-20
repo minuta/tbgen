@@ -455,7 +455,6 @@ class TestRawRule(object):
         assert rules[3] == Rule(i1, Interval(5, M), i3, Interval(9, m),\
                 i5, action, r_id)
 
-
     def test_normalize_worst_case_num_rules(self):
         raw_rule = RawRule(Interval(1, 2), Interval(3, 4), Interval(5, 6),
                 Interval(7, 8), Interval(9, 10), DROP, True, True, True, True,
@@ -752,7 +751,6 @@ class TestRule(object):
         assert Rule(i1, i2, i3, i4, i5, 1000, PASS) == r1
         assert r1 != Rule(i1, i1, i1, i1, i1, 1000, DROP)
 
-
 class TestTools(object):
 
     def test_check_nums_of_tests(self):
@@ -807,5 +805,41 @@ class TestTools(object):
         args = [prog_name, ruleset, '10', '10']
         assert T.check_args(args) == (ERROR_STR5, errno.ENOENT, ruleset, 10, 10)
 
+    # Test at Index 0
+    def test_dif(self):
+        I = Interval
+        T = Tools()
 
+        r1 = Rule(I(2, 3), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 0)
+        r2 = Rule(I(1, 5), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 1)
+        r3 = Rule(I(1, 9), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 2)
+        rset = [r1, r2, r3]
+        assert T.dif(0, rset) == [r1]
+
+    # Test at Index 1
+    def test_dif2(self):
+        I = Interval
+        T = Tools()
+
+        r1 = Rule(I(2, 3), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 0)
+        r2 = Rule(I(1, 5), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 1)
+        r3 = Rule(I(1, 9), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 2)
+        rset = [r1, r2, r3]
+
+        v1 = Rule(I(1, 1), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 1)
+        v2 = Rule(I(4, 5), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 1)
+        assert T.dif(1, rset) == [v1, v2]
+
+    # Test at Index 2
+    def test_dif3(self):
+        I = Interval
+        T = Tools()
+
+        r1 = Rule(I(2, 3), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 0)
+        r2 = Rule(I(1, 5), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 1)
+        r3 = Rule(I(1, 9), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 2)
+        rset = [r1, r2, r3]
+
+        v = Rule(I(6, 9), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 2)
+        assert T.dif(2, rset)  == [v]
 
