@@ -1,55 +1,48 @@
 <tests>
 
 	<rule id="0">
-		<test_packet id="0">
-			<src_port value="12" />
-			<dst_port value="345" />
-			<src_addr value="12234234" />
-			<dst_addr value="3452343" />
-			<protocol value="17" />
-			<rule_matches value="true">
-			<result value="PASS" />
-		</test_packet>
+		<packet id="0">
+    		<src_addr value="100000" />
+			<dst_addr value="200000" />
+			<src_port value="1" />
+			<dst_port value="2" />
+			<protocol value="15" />
+			<action value="PASS" />
+            <match value="TRUE" />
+		</packet>
 
-		<test_packet id="1">
-			<src_port value="12" />
-			<dst_port value="345" />
-			<src_addr value="12234234" />
-			<dst_addr value="3452343" />
-			<protocol value="17" />
-			<rule_matches value="false">
-			<result value="DROP" />
-		</test_packet>
-
-		...
-
+        <packet id="1">
+    		<src_addr value="110000" />
+			<dst_addr value="220000" />
+			<src_port value="11" />
+			<dst_port value="22" />
+			<protocol value="15" />
+			<action value="PASS" />
+            <match value="TRUE" />
+		</packet>
 	</rule>
 
 	<rule id="1">
-		<test_packet id="0">
-			<src_port value="12" />
-			<dst_port value="345" />
-			<src_addr value="12234234" />
-			<dst_addr value="3452343" />
-			<protocol value="17" />
-			<rule_matches value="true">
-			<result value="PASS" />
-		</test_packet>
+		<packet id="0">
+    		<src_addr value="100000" />
+			<dst_addr value="200000" />
+			<src_port value="1" />
+			<dst_port value="2" />
+			<protocol value="15" />
+			<action value="PASS" />
+            <match value="TRUE" />
+		</packet>
 
-		<test_packet id="1">
-			<src_port value="12" />
-			<dst_port value="345" />
-			<src_addr value="12234234" />
-			<dst_addr value="3452343" />
-			<protocol value="17" />
-			<rule_matches value="false">
-			<result value="DROP" />
-		</test_packet>
+        <packet id="1">
+    		<src_addr value="110000" />
+			<dst_addr value="220000" />
+			<src_port value="11" />
+			<dst_port value="22" />
+			<protocol value="15" />
+			<action value="PASS" />
+            <match value="TRUE" />
+        </packet>
+    </rule>
 
-		...
-
-	</rule>
-
-	...
 
 </tests>
