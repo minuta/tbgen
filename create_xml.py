@@ -2,14 +2,20 @@
 from xml.etree.ElementTree import ElementTree, Element, SubElement, Comment, tostring
 from xml.dom import minidom
 
+def write_to_file(root, fname):
+    # wrap it in an ElementTree instance, and save as XML
+    tree = ElementTree(root)
+    tree.write(fname)
+
+def raw_format(e):
+    return tostring(e, 'utf-8')
+
 def pretty_format(e):
     """Return a pretty-formated XML for the Element e.
     """
     rough_string = tostring(e, 'utf-8')
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="    ")
-
-
 
 def create_rule(rid):
     rule = SubElement(root, 'rule')
@@ -43,12 +49,12 @@ r2 = create_rule('r2')
 
 create_packet(r1, '0', '100000', '200000', '1', '2', '15', 'PASS', 'TRUE')
 
-
-# print tostring(root)
-
 print pretty_format(root)
 
-# wrap it in an ElementTree instance, and save as XML
-tree = ElementTree(root)
-tree.write("test.xml")
-print "XML file is written...\n"
+
+# --------------------- TESTS ----------------------------------
+def test_create_rule():
+    pass
+
+def test_create_packet():
+    pass
