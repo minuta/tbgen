@@ -1,5 +1,6 @@
 from sys import argv
 from pdb import set_trace
+from random import randint
 import os, pytest, errno
 
 skip = pytest.mark.skipif
@@ -140,6 +141,8 @@ class Interval(object):
     def interval_len(self):
         return self.b - self.a + 1
 
+    def random_value(self):
+        return randint(self.a, self.b)
 
 class IntervalList(object):
 
@@ -435,7 +438,6 @@ class Rule(object):
         return str(self)
 
     def __sub__(self, other):
-
         i1_intersect = self.i1.intersect(other.i1)
         if len(i1_intersect) == 0:
             return [self]
@@ -464,7 +466,15 @@ class Rule(object):
                self.action, self.rule_id) for i in (self.i5 - other.i5) ]
         return r1 + r2 + r3 + r4 + r5
 
-    
+    def sample_packet(self):
+        sa = self.i1.random_value()
+        da = self.i2.random_value()
+        sp = self.i3.random_value()
+        dp = self.i4.random_value()
+        pr = self.i5.random_value()
+        return sa, da, sp, dp, pr, self.action, self.rule_id 
+
+
 class Tools(object):
 
     def check_nums_of_tests(self, a, b):
@@ -532,27 +542,47 @@ class Tools(object):
 
 # ------------------------ MAIN ---------------------------------------------
 def main():
-    T = Tools()
-    message, error, fname, pos, neg = T.check_args(argv)
+#     T = Tools()
+#     message, error, fname, pos, neg = T.check_args(argv)
+# 
+#     if message == OK:
+#         with open(fname) as f:
+#             lines = f.readlines()
+#     else:
+#         T.print_error_and_exit(message, error)
+#     
+#     P = Parser(lines) 
+#     message, error, lines = P.parse()
+#     if message == OK:
+#         norm_rules = [l.normalize() for l in lines]
+#     else:
+#         T.print_error_and_exit(message, error)
+#     
+#     print "Normalized Rules : \n"
+#     for i in norm_rules:
+#         print i
+# 
+    I = Interval
+    rule = Rule(I(1, 5000), I(1, 6000), I(1, 30), I(1, 30), I(4, 4), PASS, '2') 
+    print rule
 
-    if message == OK:
-        with open(fname) as f:
-            lines = f.readlines()
-    else:
-        T.print_error_and_exit(message, error)
-    
-    P = Parser(lines) 
-    message, error, lines = P.parse()
-    if message == OK:
-        norm_rules = [l.normalize() for l in lines]
-    else:
-        T.print_error_and_exit(message, error)
-    
-    print "Normalized Rules : \n"
-    for i in norm_rules:
-        print i
+    for i in range(1, 10):
+        print rule.sample_packet()
 
+    
 
 if __name__ == '__main__': main()
 
 
+def test_get_random_sample():
+    I = Interval(1, 2)
+    x = I.random_value()
+    assert x == 1 or x == 2
+
+def test_sample_packet():
+    I = Interval
+    rule = Rule(I(1, 5000), I(1, 6000), I(1, 30), I(1, 30), I(4, 4), PASS, '2') 
+    [sa, da, sp, dp, pr, ac, rid] = rule.sample_packet()
+    assert (sa in xrange(1, 5000)) and (da in xrange(1, 6000)) and \
+           (sp in xrange(1, 30)) and (dp in xrange(1, 30)) and \
+           pr == 4 and ac == PASS and rid == '2'

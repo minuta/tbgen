@@ -52,9 +52,3 @@ create_packet(r1, '0', '100000', '200000', '1', '2', '15', 'PASS', 'TRUE')
 print pretty_format(root)
 
 
-# --------------------- TESTS ----------------------------------
-def test_create_rule():
-    pass
-
-def test_create_packet():
-    pass
