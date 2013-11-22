@@ -243,6 +243,11 @@ class TestInterval(object):
         assert x + y ==  y + x  == [Interval(1, 9)]
         assert x + z == [x, z]
 
+    def test_random_value(self):
+        I = Interval(1, 2)
+        x = I.random_value()
+        assert x == 1 or x == 2
+
 
 class TestIntervalList(object):
 
@@ -742,6 +747,15 @@ class TestRule(object):
         r1 = Rule(i1, i2, i3, i4, i5, 1000, PASS)
         assert Rule(i1, i2, i3, i4, i5, 1000, PASS) == r1
         assert r1 != Rule(i1, i1, i1, i1, i1, 1000, DROP)
+
+    def test_sample_packet(self):
+        I = Interval
+        rule = Rule(I(1, 5000), I(1, 6000), I(1, 30), I(1, 30), I(4, 4), PASS, '2') 
+        [sa, da, sp, dp, pr, ac, rid] = rule.sample_packet()
+        assert (sa in xrange(1, 5000)) and (da in xrange(1, 6000)) and \
+               (sp in xrange(1, 30)) and (dp in xrange(1, 30)) and \
+               pr == 4 and ac == PASS and rid == '2'
+
 
 class TestTools(object):
 
