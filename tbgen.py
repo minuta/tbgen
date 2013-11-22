@@ -1,7 +1,9 @@
+import os, pytest, errno
 from sys import argv
 from pdb import set_trace
 from random import randint
-import os, pytest, errno
+from xml.etree.ElementTree import ElementTree, Element, SubElement, tostring
+from xml.dom import minidom
 
 skip = pytest.mark.skipif
 
@@ -540,6 +542,48 @@ class Tools(object):
             return [rset[0]]
 
 
+class XML(object):
+
+    def write_to_file(self, root, fname):
+        # wrap it in an ElementTree instance, and save as XML
+        tree = ElementTree(root)
+        tree.write(fname)
+
+    def raw_format(self, e):
+        return tostring(e, 'utf-8')
+
+    def pretty_format(self, e):
+        """Return a pretty-formated XML for the Element e.
+        """
+        rough_string = tostring(e, 'utf-8')
+        reparsed = minidom.parseString(rough_string)
+        return reparsed.toprettyxml(indent="    ")
+
+    def create_rule(self, rid):
+        rule = SubElement(root, 'rule')
+        rule.set('id', rid)
+        return rule
+
+    def create_packet(self, parent, pid, sa, da, sp, dp, pr, ac, ma):
+        packet = SubElement(parent, 'packet')
+        packet.set('id', pid)
+        src_addr = SubElement(packet, 'src_addr')
+        dst_addr = SubElement(packet, 'dst_addr')
+        src_port = SubElement(packet, 'src_port')
+        dst_port = SubElement(packet, 'dst_port')
+        protocol = SubElement(packet, 'protocol')
+        action = SubElement(packet, 'action')
+        match = SubElement(packet, 'match')
+
+        src_addr.text = sa
+        dst_addr.text = da
+        src_port.text = sp
+        dst_port.text = dp
+        protocol.text = pr
+        action.text = ac
+        match.text = ma
+
+
 # ------------------------ MAIN ---------------------------------------------
 def main():
 #     T = Tools()
@@ -573,16 +617,3 @@ def main():
 
 if __name__ == '__main__': main()
 
-
-def test_get_random_sample():
-    I = Interval(1, 2)
-    x = I.random_value()
-    assert x == 1 or x == 2
-
-def test_sample_packet():
-    I = Interval
-    rule = Rule(I(1, 5000), I(1, 6000), I(1, 30), I(1, 30), I(4, 4), PASS, '2') 
-    [sa, da, sp, dp, pr, ac, rid] = rule.sample_packet()
-    assert (sa in xrange(1, 5000)) and (da in xrange(1, 6000)) and \
-           (sp in xrange(1, 30)) and (dp in xrange(1, 30)) and \
-           pr == 4 and ac == PASS and rid == '2'
