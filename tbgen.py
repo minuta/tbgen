@@ -406,7 +406,7 @@ class RawRule(object):
 
 
 class Rule(object):
-    """ Represents  a normalized firewall rule, i.e. there are no more negated
+    """ Repr esents  a normalized firewall rule, i.e. there are no more negated
         fields.
     """
     
@@ -545,7 +545,7 @@ class Tools(object):
 class XML(object):
 
     def write_to_file(self, root, fname):
-        # wrap it in an ElementTree instance, and save as XML
+        """ wrap root in an ElementTree instance, and save as XML. """
         tree = ElementTree(root)
         tree.write(fname)
 
@@ -559,7 +559,7 @@ class XML(object):
         reparsed = minidom.parseString(rough_string)
         return reparsed.toprettyxml(indent="    ")
 
-    def create_rule(self, rid):
+    def create_rule(self, root, rid):
         rule = SubElement(root, 'rule')
         rule.set('id', rid)
         return rule
@@ -567,53 +567,63 @@ class XML(object):
     def create_packet(self, parent, pid, sa, da, sp, dp, pr, ac, ma):
         packet = SubElement(parent, 'packet')
         packet.set('id', pid)
-        src_addr = SubElement(packet, 'src_addr')
-        dst_addr = SubElement(packet, 'dst_addr')
-        src_port = SubElement(packet, 'src_port')
-        dst_port = SubElement(packet, 'dst_port')
-        protocol = SubElement(packet, 'protocol')
-        action = SubElement(packet, 'action')
-        match = SubElement(packet, 'match')
+        src_addr = SubElement(packet, 'src_addr').text = sa
+        dst_addr = SubElement(packet, 'dst_addr').text = da
+        src_port = SubElement(packet, 'src_port').text = sp
+        dst_port = SubElement(packet, 'dst_port').text = dp
+        protocol = SubElement(packet, 'protocol').text = pr
+        action = SubElement(packet, 'action').text = ac
+        match = SubElement(packet, 'match').text = ma
 
-        src_addr.text = sa
-        dst_addr.text = da
-        src_port.text = sp
-        dst_port.text = dp
-        protocol.text = pr
-        action.text = ac
-        match.text = ma
+    def generate_pos_packets_for_rule(self, parent, rule, n):
+        """ Generate n positive Packets for rule rule, for Node parent. """
+        for i in xrange(1, n+1):
+            sa, da, sp, dp, pr, ac, rid = rule.sample_packet()
+            self.create_packet(parent, str(i), str(sa), str(da), str(sp), str(dp), str(pr), str(ac), 'TRUE') 
 
+    def generate_neg_packets_for_rule(self, parent, rule, n):
+        pass
 
 # ------------------------ MAIN ---------------------------------------------
+
 def main():
-#     T = Tools()
-#     message, error, fname, pos, neg = T.check_args(argv)
-# 
-#     if message == OK:
-#         with open(fname) as f:
-#             lines = f.readlines()
-#     else:
-#         T.print_error_and_exit(message, error)
-#     
-#     P = Parser(lines) 
-#     message, error, lines = P.parse()
-#     if message == OK:
-#         norm_rules = [l.normalize() for l in lines]
-#     else:
-#         T.print_error_and_exit(message, error)
-#     
-#     print "Normalized Rules : \n"
-#     for i in norm_rules:
-#         print i
-# 
-    I = Interval
-    rule = Rule(I(1, 5000), I(1, 6000), I(1, 30), I(1, 30), I(4, 4), PASS, '2') 
-    print rule
+    T = Tools()
+    message, error, fname, pos, neg = T.check_args(argv)
 
-    for i in range(1, 10):
-        print rule.sample_packet()
-
+    if message == OK:
+        with open(fname) as f:
+            lines = f.readlines()
+    else:
+        T.print_error_and_exit(message, error)
     
+    P = Parser(lines) 
+    message, error, lines = P.parse()
+    if message == OK:
+        norm_rules = [l.normalize() for l in lines]
+    else:
+        T.print_error_and_exit(message, error)
+
+
+    _xml = XML() 
+    # Create a root Element
+    root = Element('tests')
+
+
+    for same_id_rule_set in norm_rules:
+#         set_trace()
+        q = randint(0, len(same_id_rule_set)-1)
+#         for rule in same_id_rule_set:
+        rule = same_id_rule_set[q]
+        # Create a rule Element
+        rid = rule.rule_id
+        r = _xml.create_rule(root, str(rule.rule_id))
+        # Generate pos number of positive packets for a rule
+        _xml.generate_pos_packets_for_rule(r, rule, pos)
+        # Generate neg number of negative packets for a rule
+        print rule, "\n"
+        
+    print _xml.pretty_format(root)
+
 
 if __name__ == '__main__': main()
 
