@@ -51,7 +51,7 @@ ERROR_STR7 = "Error : Wrong argument type!\n"
 
 class Interval(object):
 
-    def __init__(self, a, b):
+    def  __init__(self, a, b):
         self.a = a
         self.b = b
 
@@ -145,6 +145,14 @@ class Interval(object):
 
     def random_value(self):
         return randint(self.a, self.b)
+
+    def random_neg_value(self, range_min, range_max):
+#         set_trace()
+        if self == Interval(range_min, range_max):
+            return False, self.random_value() 
+        i = self.negate(range_min, range_max)
+        return True, i[0].random_value()
+
 
 class IntervalList(object):
 
@@ -476,6 +484,18 @@ class Rule(object):
         pr = self.i5.random_value()
         return sa, da, sp, dp, pr, self.action, self.rule_id 
 
+    def sample_neg_packet(self):
+        ok_sa, sa = self.i1.random_neg_value(MIN_ADDR, MAX_ADDR)
+        ok_da, da = self.i2.random_neg_value(MIN_ADDR, MAX_ADDR)
+        ok_sp, sp = self.i3.random_neg_value(MIN_PORT, MAX_PORT)
+        ok_dp, dp = self.i4.random_neg_value(MIN_PORT, MAX_PORT)
+        ok_pr, pr = self.i5.random_neg_value(MIN_PROT, MAX_PROT)
+        
+        if ok_sa == True or ok_da == True or ok_sp == True or ok_dp == True or\
+                ok_pr == True:
+            return sa, da, sp, dp, pr, self.action, self.rule_id 
+        print_error_and_exit("Error : couldn't generate a negative packet for\
+                rule ", self) 
 
 class Tools(object):
 
@@ -579,14 +599,24 @@ class XML(object):
         """ Generate n positive Packets for rule rule, for Node parent. """
         for i in xrange(1, n+1):
             sa, da, sp, dp, pr, ac, rid = rule.sample_packet()
-            self.create_packet(parent, str(i), str(sa), str(da), str(sp), str(dp), str(pr), str(ac), 'TRUE') 
+            self.create_packet(parent, str(i), str(sa), str(da), str(sp),\
+                    str(dp), str(pr), str(ac), 'TRUE') 
 
-    def generate_neg_packets_for_rule(self, parent, rule, n):
-        pass
+    def generate_packets_for_rule(self, parent, rule, n, rule_affinity):
+        """ Generate n positive Packets for rule rule, for Node parent. """
+        for i in xrange(1, n+1):
+            if rule_affinity == True:
+                sa, da, sp, dp, pr, ac, rid = rule.sample_packet()
+            else:
+                sa, da, sp, dp, pr, ac, rid = rule.sample_neg_packet()
+            self.create_packet(parent, str(i), str(sa), str(da), str(sp),\
+                                str(dp), str(pr), str(ac), str(rule_affinity)) 
+
 
 # ------------------------ MAIN ---------------------------------------------
 
 def main():
+
     T = Tools()
     message, error, fname, pos, neg = T.check_args(argv)
 
@@ -602,6 +632,12 @@ def main():
         norm_rules = [l.normalize() for l in lines]
     else:
         T.print_error_and_exit(message, error)
+    
+    print "Normalized Rules : ------------- "
+    print norm_rules
+    print "---------------------------------"
+
+    
 
 
     _xml = XML() 
@@ -610,16 +646,20 @@ def main():
 
 
     for same_id_rule_set in norm_rules:
-#         set_trace()
+        # choose a random rule from ruleset with same id
         q = randint(0, len(same_id_rule_set)-1)
-#         for rule in same_id_rule_set:
         rule = same_id_rule_set[q]
+
+        # TODO: rule Subtraction
+
         # Create a rule Element
         rid = rule.rule_id
         r = _xml.create_rule(root, str(rule.rule_id))
         # Generate pos number of positive packets for a rule
-        _xml.generate_pos_packets_for_rule(r, rule, pos)
+#         _xml.generate_pos_packets_for_rule(r, rule, pos)
+        _xml.generate_packets_for_rule(r, rule, pos, True)
         # Generate neg number of negative packets for a rule
+        _xml.generate_packets_for_rule(r, rule, neg, False)
         print rule, "\n"
         
     print _xml.pretty_format(root)
