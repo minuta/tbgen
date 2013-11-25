@@ -595,22 +595,25 @@ class XML(object):
         action = SubElement(packet, 'action').text = ac
         match = SubElement(packet, 'match').text = ma
 
-    def generate_pos_packets_for_rule(self, parent, rule, n):
-        """ Generate n positive Packets for rule rule, for Node parent. """
-        for i in xrange(1, n+1):
-            sa, da, sp, dp, pr, ac, rid = rule.sample_packet()
-            self.create_packet(parent, str(i), str(sa), str(da), str(sp),\
-                    str(dp), str(pr), str(ac), 'TRUE') 
+#     def generate_pos_packets_for_rule(self, parent, rule, n):
+#         """ Generate n positive Packets for rule rule, for Node parent. """
+#         for i in xrange(1, n+1):
+#             sa, da, sp, dp, pr, ac, rid = rule.sample_packet()
+#             self.create_packet(parent, str(i), str(sa), str(da), str(sp),\
+#                     str(dp), str(pr), str(ac), 'TRUE') 
 
     def generate_packets_for_rule(self, parent, rule, n, rule_affinity):
-        """ Generate n positive Packets for rule rule, for Node parent. """
+        """ Generate n positive or negative Packets (via rule_affinity) 
+            for rule rule, for Node parent. """
         for i in xrange(1, n+1):
             if rule_affinity == True:
+                packet_aff = 'p'  # positive Packet
                 sa, da, sp, dp, pr, ac, rid = rule.sample_packet()
             else:
+                packet_aff = 'n'  # negative Packet
                 sa, da, sp, dp, pr, ac, rid = rule.sample_neg_packet()
-            self.create_packet(parent, str(i), str(sa), str(da), str(sp),\
-                                str(dp), str(pr), str(ac), str(rule_affinity)) 
+            self.create_packet(parent, packet_aff + str(i), str(sa), str(da),\
+                    str(sp), str(dp), str(pr), str(ac), str(rule_affinity)) 
 
 
 # ------------------------ MAIN ---------------------------------------------
