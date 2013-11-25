@@ -147,7 +147,6 @@ class Interval(object):
         return randint(self.a, self.b)
 
     def random_neg_value(self, range_min, range_max):
-#         set_trace()
         if self == Interval(range_min, range_max):
             return False, self.random_value() 
         i = self.negate(range_min, range_max)
@@ -564,27 +563,29 @@ class Tools(object):
 
 class XML(object):
 
-    def write_to_file(self, root, fname):
+    def write_xml_to_file(self, root, fname):
         """ wrap root in an ElementTree instance, and save as XML. """
         tree = ElementTree(root)
         tree.write(fname)
 
-    def raw_format(self, e):
+    def raw_xml_format(self, e):
         return tostring(e, 'utf-8')
 
-    def pretty_format(self, e):
+    def pretty_xml_format(self, e):
         """Return a pretty-formated XML for the Element e.
         """
         rough_string = tostring(e, 'utf-8')
         reparsed = minidom.parseString(rough_string)
         return reparsed.toprettyxml(indent="    ")
 
-    def create_rule(self, root, rid):
-        rule = SubElement(root, 'rule')
+    def create_xml_rule(self, parent, rid):
+        """ Creates an XML Element 'rule' for given parent and rule id"""
+        rule = SubElement(parent, 'rule')
         rule.set('id', rid)
         return rule
 
-    def create_packet(self, parent, pid, sa, da, sp, dp, pr, ac, ma):
+    def create_xml_packet(self, parent, pid, sa, da, sp, dp, pr, ac, ma):
+        """ Creates an XML Element packet for given args. """
         packet = SubElement(parent, 'packet')
         packet.set('id', pid)
         src_addr = SubElement(packet, 'src_addr').text = sa
@@ -595,14 +596,7 @@ class XML(object):
         action = SubElement(packet, 'action').text = ac
         match = SubElement(packet, 'match').text = ma
 
-#     def generate_pos_packets_for_rule(self, parent, rule, n):
-#         """ Generate n positive Packets for rule rule, for Node parent. """
-#         for i in xrange(1, n+1):
-#             sa, da, sp, dp, pr, ac, rid = rule.sample_packet()
-#             self.create_packet(parent, str(i), str(sa), str(da), str(sp),\
-#                     str(dp), str(pr), str(ac), 'TRUE') 
-
-    def generate_packets_for_rule(self, parent, rule, n, rule_affinity):
+    def generate_xml_packets_for_rule(self, parent, rule, n, rule_affinity):
         """ Generate n positive or negative Packets (via rule_affinity) 
             for rule rule, for Node parent. """
         for i in xrange(1, n+1):
@@ -612,7 +606,7 @@ class XML(object):
             else:
                 packet_aff = 'n'  # negative Packet
                 sa, da, sp, dp, pr, ac, rid = rule.sample_neg_packet()
-            self.create_packet(parent, packet_aff + str(i), str(sa), str(da),\
+            self.create_xml_packet(parent, packet_aff + str(i), str(sa), str(da),\
                     str(sp), str(dp), str(pr), str(ac), str(rule_affinity)) 
 
 
@@ -640,9 +634,6 @@ def main():
     print norm_rules
     print "---------------------------------"
 
-    
-
-
     _xml = XML() 
     # Create a root Element
     root = Element('tests')
@@ -657,15 +648,14 @@ def main():
 
         # Create a rule Element
         rid = rule.rule_id
-        r = _xml.create_rule(root, str(rule.rule_id))
+        r = _xml.create_xml_rule(root, str(rule.rule_id))
         # Generate pos number of positive packets for a rule
-#         _xml.generate_pos_packets_for_rule(r, rule, pos)
-        _xml.generate_packets_for_rule(r, rule, pos, True)
+        _xml.generate_xml_packets_for_rule(r, rule, pos, True)
         # Generate neg number of negative packets for a rule
-        _xml.generate_packets_for_rule(r, rule, neg, False)
+        _xml.generate_xml_packets_for_rule(r, rule, neg, False)
         print rule, "\n"
         
-    print _xml.pretty_format(root)
+    print _xml.pretty_xml_format(root)
 
 
 if __name__ == '__main__': main()
