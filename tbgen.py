@@ -544,9 +544,13 @@ class Tools(object):
             error = errno.EINVAL
         return message, error, fname, pos_tests, neg_tests
 
+    def make_flat(self, l):
+        """ makes l, which is a list of lists a flat list """
+        return [item for sublist in l for item in sublist]
+
     def dif(self, index, rset):
         """ Difference of a rule at given index "index" in rset with rules of rset 
-            between index 0 and "index".
+            between index 0 and "index". rset is a Flat-List!
             As output we get an unnested list of rules like :
             [... [[[r-r1]-r2]-r3]-... - rn]
             where r is a rule at index "index" and
@@ -559,6 +563,21 @@ class Tools(object):
             return return_set
         else:
             return [rset[0]]
+
+    def make_independent(self, index, rset):
+        """ Like Tools.dif, but rset is not a Flat-List. Thus, we have to
+            handle lists of lists.
+        """
+#         set_trace()
+        if index == 0:
+            return rset[0]
+        ret_set = []
+        target_rules = rset[index]
+        operator_rules = rset[:index]
+        for rule in target_rules:
+            flat_set = self.make_flat(operator_rules + [[rule]])
+            ret_set.append(self.dif(len(flat_set) - 1, flat_set)[0]) 
+        return ret_set
 
 
 class XML(object):
@@ -614,49 +633,115 @@ class XML(object):
 
 def main():
 
-    T = Tools()
-    message, error, fname, pos, neg = T.check_args(argv)
-
-    if message == OK:
-        with open(fname) as f:
-            lines = f.readlines()
-    else:
-        T.print_error_and_exit(message, error)
-    
-    P = Parser(lines) 
-    message, error, lines = P.parse()
-    if message == OK:
-        norm_rules = [l.normalize() for l in lines]
-    else:
-        T.print_error_and_exit(message, error)
-    
-    print "Normalized Rules : ------------- "
-    print norm_rules
-    print "---------------------------------"
-
-    _xml = XML() 
-    # Create a root Element
-    root = Element('tests')
+#     T = Tools()
+#     message, error, fname, pos, neg = T.check_args(argv)
+# 
+#     if message == OK:
+#         with open(fname) as f:
+#             lines = f.readlines()
+#     else:
+#         T.print_error_and_exit(message, error)
+#     
+#     P = Parser(lines) 
+#     message, error, lines = P.parse()
+#     if message == OK:
+#         norm_rules = [l.normalize() for l in lines]
+#     else:
+#         T.print_error_and_exit(message, error)
+#     
+#     print "Normalized Rules : ------------- "
+#     print norm_rules
+#     print "---------------------------------"
+#     for same_id_rule_set in norm_rules:
+        # for each rule do a Subtraction
 
 
-    for same_id_rule_set in norm_rules:
-        # choose a random rule from ruleset with same id
-        q = randint(0, len(same_id_rule_set)-1)
-        rule = same_id_rule_set[q]
+#     _xml = XML() 
+#     # Create a root Element
+#     root = Element('tests')
+# 
+# 
+#     for same_id_rule_set in norm_rules:
+#         # choose a random rule from ruleset with same id
+#         q = randint(0, len(same_id_rule_set)-1)
+#         rule = same_id_rule_set[q]
+# 
+#         # TODO: rule Subtraction
+# 
+#         # Create a rule Element
+#         rid = rule.rule_id
+#         r = _xml.create_xml_rule(root, str(rule.rule_id))
+#         # Generate pos number of positive packets for a rule
+#         _xml.generate_xml_packets_for_rule(r, rule, pos, True)
+#         # Generate neg number of negative packets for a rule
+#         _xml.generate_xml_packets_for_rule(r, rule, neg, False)
+#         print rule, "\n"
+#         
+#     print _xml.pretty_xml_format(root)
 
-        # TODO: rule Subtraction
 
-        # Create a rule Element
-        rid = rule.rule_id
-        r = _xml.create_xml_rule(root, str(rule.rule_id))
-        # Generate pos number of positive packets for a rule
-        _xml.generate_xml_packets_for_rule(r, rule, pos, True)
-        # Generate neg number of negative packets for a rule
-        _xml.generate_xml_packets_for_rule(r, rule, neg, False)
-        print rule, "\n"
-        
-    print _xml.pretty_xml_format(root)
+       print ret
 
 
 if __name__ == '__main__': main()
+
+def test_make_flat():
+    T = Tools()
+    li = [[1, 2, 3], [4, 5], [7, 8, 9]]
+    assert T.make_flat(li) == [1, 2, 3, 4, 5, 7, 8, 9]
+
+def test_make_independent_1():
+    I = Interval
+    T = Tools()
+
+    r1 = Rule(I(2, 3), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 1)
+    r2 = Rule(I(1, 5), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 1)
+    r3 = Rule(I(1, 9), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 2)
+    r4 = Rule(I(10, 15), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 2)
+    r5 = Rule(I(1, 15), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 3)
+    
+    rset = [[r1, r2], [r3, r4], [r5]]
+    
+    assert T.make_independent(0, rset) == [r1, r2]
+
+def test_make_independent_2():
+    I = Interval
+    T = Tools()
+
+    r1 = Rule(I(2, 3), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 1)
+    r2 = Rule(I(1, 5), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 1)
+    r3 = Rule(I(1, 9), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 2)
+    r4 = Rule(I(10, 15), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 2)
+    r5 = Rule(I(1, 15), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 4)
+    
+    rset = [[r1, r2], [r3, r4], [r5]]
+    
+#     p1 = T.dif(2, [r1, r2, r3])
+    p1 = Rule(I(6, 9), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 2)
+#     p2 = T.dif(2, [r1, r2, r4])
+    p2 = r4
+    assert T.make_independent(1, rset) == [p1, p2]
+
+def test_make_independent_3():
+    I = Interval
+    T = Tools()
+
+    r1 = Rule(I(2, 3), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 1)
+    r2 = Rule(I(1, 5), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 1)
+    r3 = Rule(I(1, 9), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 2)
+    r4 = Rule(I(10, 15), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 2)
+    r5 = Rule(I(1, 20), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 4)
+    
+    rset = [[r1, r2], [r3, r4], [r5]]
+    
+#     p1 = T.dif(2, [r1, r2, r3])
+#     p1 = Rule(I(6, 9), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 2)
+#     p2 = T.dif(2, [r1, r2, r4])
+#     p2 = r4
+    r = Rule(I(16, 20), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 4)
+
+    assert T.make_independent(2, rset) == [r]
+
+
+
 
