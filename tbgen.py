@@ -633,40 +633,58 @@ class XML(object):
 
 def main():
 
-#     T = Tools()
-#     message, error, fname, pos, neg = T.check_args(argv)
-# 
-#     if message == OK:
-#         with open(fname) as f:
-#             lines = f.readlines()
-#     else:
-#         T.print_error_and_exit(message, error)
-#     
-#     P = Parser(lines) 
-#     message, error, lines = P.parse()
-#     if message == OK:
-#         norm_rules = [l.normalize() for l in lines]
-#     else:
-#         T.print_error_and_exit(message, error)
-#     
-#     print "Normalized Rules : ------------- "
-#     print norm_rules
-#     print "---------------------------------"
-#     for same_id_rule_set in norm_rules:
-        # for each rule do a Subtraction
+    T = Tools()
+    message, error, fname, pos, neg = T.check_args(argv)
+
+    if message == OK:
+        with open(fname) as f:
+            lines = f.readlines()
+    else:
+        T.print_error_and_exit(message, error)
+    
+    P = Parser(lines) 
+    message, error, lines = P.parse()
+    if message == OK:
+        norm_rules = [l.normalize() for l in lines]
+    else:
+        T.print_error_and_exit(message, error)
+    
+    print "Normalized Rules : ------------- "
+    print norm_rules
+    print "---------------------------------"
 
 
-#     _xml = XML() 
-#     # Create a root Element
-#     root = Element('tests')
-# 
-# 
-#     for same_id_rule_set in norm_rules:
+    # -------------- Generate Tests for ONLY one rule in initial rule-set ----
+    result_rules = T.make_independent(1, norm_rules) 
+
+    # At this point we got a get a result-set of independent rules and
+    # ready for XML-Output
+
+    _xml = XML() 
+    # Create a root Element
+    root = Element('tests')
+
+    # choose a random rule from a result-set
+    q = randint(0, len(result_rules)-1)
+    rule = result_rules[q]
+
+    # Create a rule Element
+    rid = rule.rule_id
+    r = _xml.create_xml_rule(root, str(rule.rule_id))
+    # Generate pos number of positive packets for a rule
+    _xml.generate_xml_packets_for_rule(r, rule, pos, True)
+    # Generate neg number of negative packets for a rule
+    _xml.generate_xml_packets_for_rule(r, rule, neg, False)
+    print rule, "\n"
+        
+    print _xml.pretty_xml_format(root)
+
+
+
+#     for same_id_rule_set in result_rules:
 #         # choose a random rule from ruleset with same id
 #         q = randint(0, len(same_id_rule_set)-1)
 #         rule = same_id_rule_set[q]
-# 
-#         # TODO: rule Subtraction
 # 
 #         # Create a rule Element
 #         rid = rule.rule_id
@@ -679,8 +697,6 @@ def main():
 #         
 #     print _xml.pretty_xml_format(root)
 
-
-       print ret
 
 
 if __name__ == '__main__': main()
@@ -734,10 +750,6 @@ def test_make_independent_3():
     
     rset = [[r1, r2], [r3, r4], [r5]]
     
-#     p1 = T.dif(2, [r1, r2, r3])
-#     p1 = Rule(I(6, 9), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 2)
-#     p2 = T.dif(2, [r1, r2, r4])
-#     p2 = r4
     r = Rule(I(16, 20), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 4)
 
     assert T.make_independent(2, rset) == [r]
