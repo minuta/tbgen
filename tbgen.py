@@ -474,13 +474,12 @@ class Rule(object):
         return r1 + r2 + r3 + r4 + r5
 
     def sample_packet(self):
-#         set_trace()
         sa = self.i1.random_value()
         da = self.i2.random_value()
         sp = self.i3.random_value()
         dp = self.i4.random_value()
         pr = self.i5.random_value()
-        return sa, da, sp, dp, pr, self.action, self.rule_id 
+        return Packet(sa, da, sp, dp, pr, self.action, self.rule_id)
 
     def sample_neg_packet(self):
         ok_sa, sa = self.i1.random_neg_value(MIN_ADDR, MAX_ADDR)
@@ -491,7 +490,7 @@ class Rule(object):
         
         if ok_sa == True or ok_da == True or ok_sp == True or ok_dp == True or\
                 ok_pr == True:
-            return sa, da, sp, dp, pr, self.action, self.rule_id 
+            return Packet(sa, da, sp, dp, pr, self.action, self.rule_id)
         print_error_and_exit("Error : couldn't generate a negative packet for\
                 rule ", self) 
 
@@ -515,7 +514,6 @@ class Packet(object):
 
     def in_rule(self, rule):
         I = Interval
-#         set_trace()
         return  I(self.sa, self.sa).is_subinterval(rule.i1) and \
                 I(self.da, self.da).is_subinterval(rule.i2) and \
                 I(self.sp, self.sp).is_subinterval(rule.i3) and \
@@ -649,12 +647,14 @@ class XML(object):
         for i in xrange(1, n+1):
             if rule_affinity == True:
                 packet_aff = 'p'  # positive Packet
-                sa, da, sp, dp, pr, ac, rid = rule.sample_packet()
+                p = rule.sample_packet()
             else:
                 packet_aff = 'n'  # negative Packet
-                sa, da, sp, dp, pr, ac, rid = rule.sample_neg_packet()
-            self.create_xml_packet(parent, packet_aff + str(i), str(sa), str(da),\
-                    str(sp), str(dp), str(pr), str(ac), str(rule_affinity)) 
+                p = rule.sample_neg_packet()
+
+            self.create_xml_packet(parent, packet_aff + str(i), str(p.sa), \
+                    str(p.da), str(p.sp), str(p.dp), str(p.pr), str(p.ac), \
+                    str(rule_affinity)) 
 
 
 # ------------------------ MAIN ---------------------------------------------
@@ -709,5 +709,4 @@ def main():
 
 
 if __name__ == '__main__': main()
-
 

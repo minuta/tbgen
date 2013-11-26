@@ -738,7 +738,6 @@ class TestRule(object):
 
         assert r1 - r2 == [r1]
 
-
     def test_num_rules_21(self):
         I = Interval
         r1 = Rule(I(1, 5), I(2, 5), I(3, 3), I(4, 4), I(5, 5), DROP, 1)
@@ -766,23 +765,29 @@ class TestRule(object):
     def test_sample_packet1(self):
         I = Interval
         rule = Rule(I(1, 5000), I(1, 6000), I(1, 30), I(1, 30), I(4, 4), PASS, '2') 
-        [sa, da, sp, dp, pr, ac, rid] = rule.sample_packet()
-        assert (sa in xrange(1, 5000 + 1)) and (da in xrange(1, 6000 + 1)) and \
-               (sp in xrange(1, 30 + 1)) and (dp in xrange(1, 30 + 1)) and \
-               pr == 4 and ac == PASS and rid == '2'
+        p = rule.sample_packet()
+        assert (p.sa in xrange(1, 5000 + 1)) and (p.da in xrange(1, 6000 + 1)) and \
+               (p.sp in xrange(1, 30 + 1)) and (p.dp in xrange(1, 30 + 1)) and \
+               p.pr == 4 and p.ac == PASS and p.rid == '2'
 
     def test_sample_packet2(self):
         I = Interval
         rule = Rule(I(1, 2), I(1, 2), I(1, 2), I(1, 2), I(4, 4), PASS, '2') 
-        [sa, da, sp, dp, pr, ac, rid] = rule.sample_packet()
-        assert (sa in xrange(1, 2 + 1)) and (da in xrange(1, 2 + 1)) and \
-               (sp in xrange(1, 2 + 1)) and (dp in xrange(1, 2 + 1)) and \
-               pr == 4 and ac == PASS and rid == '2'
-
+        p = rule.sample_packet()
+        assert (p.sa in xrange(1, 2 + 1)) and (p.da in xrange(1, 2 + 1)) and \
+               (p.sp in xrange(1, 2 + 1)) and (p.dp in xrange(1, 2 + 1)) and \
+               p.pr == 4 and p.ac == PASS and p.rid == '2'
 
     def test_sample_neg_packet(self):
         I = Interval
-        rule = Rule(I(1, 5000), I(1, 6000), I(1, 30), I(1, 30), I(4, 4), PASS, '2') 
+        rule = Rule(I(1, 2), I(1, 2), I(1, 2), I(1, 2), I(4, 4), PASS, '2') 
+        p = rule.sample_neg_packet()
+        assert (p.sa not in xrange(1, 2 + 1)) or \
+               (p.da not in xrange(1, 2 + 1)) or \
+               (p.sp not in xrange(1, 2 + 1)) or \
+               (p.dp not in xrange(1, 2 + 1)) or \
+               p.pr != 4 or p.ac != PASS or  p.rid == '2'
+               
 
 
 class TestTools(object):
@@ -929,6 +934,7 @@ class TestTools(object):
         r = Rule(I(16, 20), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 4)
 
         assert T.make_independent(2, rset) == [r]
+
 
 
 class Test_Packet(object):
