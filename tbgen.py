@@ -474,6 +474,7 @@ class Rule(object):
         return r1 + r2 + r3 + r4 + r5
 
     def sample_packet(self):
+#         set_trace()
         sa = self.i1.random_value()
         da = self.i2.random_value()
         sp = self.i3.random_value()
@@ -513,14 +514,15 @@ class Packet(object):
         return str(self)
 
     def in_rule(self, rule):
-        I = Interval()
+        I = Interval
+#         set_trace()
         return  I(self.sa, self.sa).is_subinterval(rule.i1) and \
                 I(self.da, self.da).is_subinterval(rule.i2) and \
                 I(self.sp, self.sp).is_subinterval(rule.i3) and \
                 I(self.dp, self.dp).is_subinterval(rule.i4) and \
                 I(self.pr, self.pr).is_subinterval(rule.i5) and \
-                I(self.ac, self.ac).is_subinterval(rule.action) and \
-                I(self.pr, self.pr).is_subinterval(rule.rule_id)
+                self.ac == rule.action and \
+                self.rid == rule.rule_id
 
 class Tools(object):
 

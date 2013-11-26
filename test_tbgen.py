@@ -1,5 +1,5 @@
 from tbgen import Tools, Interval, IntervalList, Parser, RawRule,\
-        Rule, PASS, DROP, ERROR_STR1, ERROR_STR2,ERROR_STR3,\
+        Rule, Packet, PASS, DROP, ERROR_STR1, ERROR_STR2,ERROR_STR3,\
         ERROR_STR4, ERROR_STR5, ERROR_STR7, OK, NMIN, NMAX
 import os, errno, pytest
 
@@ -763,13 +763,22 @@ class TestRule(object):
         assert Rule(i1, i2, i3, i4, i5, 1000, PASS) == r1
         assert r1 != Rule(i1, i1, i1, i1, i1, 1000, DROP)
 
-    def test_sample_packet(self):
+    def test_sample_packet1(self):
         I = Interval
         rule = Rule(I(1, 5000), I(1, 6000), I(1, 30), I(1, 30), I(4, 4), PASS, '2') 
         [sa, da, sp, dp, pr, ac, rid] = rule.sample_packet()
-        assert (sa in xrange(1, 5000)) and (da in xrange(1, 6000)) and \
-               (sp in xrange(1, 30)) and (dp in xrange(1, 30)) and \
+        assert (sa in xrange(1, 5000 + 1)) and (da in xrange(1, 6000 + 1)) and \
+               (sp in xrange(1, 30 + 1)) and (dp in xrange(1, 30 + 1)) and \
                pr == 4 and ac == PASS and rid == '2'
+
+    def test_sample_packet2(self):
+        I = Interval
+        rule = Rule(I(1, 2), I(1, 2), I(1, 2), I(1, 2), I(4, 4), PASS, '2') 
+        [sa, da, sp, dp, pr, ac, rid] = rule.sample_packet()
+        assert (sa in xrange(1, 2 + 1)) and (da in xrange(1, 2 + 1)) and \
+               (sp in xrange(1, 2 + 1)) and (dp in xrange(1, 2 + 1)) and \
+               pr == 4 and ac == PASS and rid == '2'
+
 
     def test_sample_neg_packet(self):
         I = Interval
@@ -921,5 +930,28 @@ class TestTools(object):
 
         assert T.make_independent(2, rset) == [r]
 
+
+class Test_Packet(object):
+
+    def test_in_rule1(self):
+        I = Interval
+        r1 = Rule(I(1, 6), I(1, 6), I(1, 6), I(1, 6), I(1, 6), DROP, 1)
+        P = Packet
+        p1 = P(3, 3, 3, 3, 3, DROP, 1)
+        assert p1.in_rule(r1)
+
+    def test_in_rule2(self):
+        I = Interval
+        r1 = Rule(I(1, 6), I(1, 6), I(1, 6), I(1, 6), I(1, 6), DROP, 1)
+        P = Packet
+        p1 = P(7, 3, 3, 3, 3, DROP, 1)
+        assert not p1.in_rule(r1)
+
+    def test_in_rule3(self):
+        I = Interval
+        r1 = Rule(I(1, 6), I(1, 6), I(1, 6), I(1, 6), I(1, 6), DROP, 1)
+        P = Packet
+        p1 = P(3, 3, 3, 3, 3, DROP, 2)
+        assert not p1.in_rule(r1)
 
 
