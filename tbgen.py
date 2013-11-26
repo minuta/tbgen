@@ -653,50 +653,31 @@ def main():
     print norm_rules
     print "---------------------------------"
 
-
-    # -------------- Generate Tests for ONLY one rule in initial rule-set ----
-    result_rules = T.make_independent(1, norm_rules) 
-
-    # At this point we got a get a result-set of independent rules and
-    # ready for XML-Output
-
     _xml = XML() 
     # Create a root Element
     root = Element('tests')
 
-    # choose a random rule from a result-set
-    q = randint(0, len(result_rules)-1)
-    rule = result_rules[q]
+    for i in xrange(len(norm_rules)):
+        # -------------- Generate Tests for ONLY one rule in initial rule-set ----
+        result_rules = T.make_independent(i, norm_rules) 
 
-    # Create a rule Element
-    rid = rule.rule_id
-    r = _xml.create_xml_rule(root, str(rule.rule_id))
-    # Generate pos number of positive packets for a rule
-    _xml.generate_xml_packets_for_rule(r, rule, pos, True)
-    # Generate neg number of negative packets for a rule
-    _xml.generate_xml_packets_for_rule(r, rule, neg, False)
-    print rule, "\n"
-        
-    print _xml.pretty_xml_format(root)
+        # At this point we got a get a result-set of independent rules and
+        # ready for XML-Output
 
+        # choose a random rule from a result-set
+        q = randint(0, len(result_rules)-1)
+        rule = result_rules[q]
 
-
-#     for same_id_rule_set in result_rules:
-#         # choose a random rule from ruleset with same id
-#         q = randint(0, len(same_id_rule_set)-1)
-#         rule = same_id_rule_set[q]
-# 
-#         # Create a rule Element
-#         rid = rule.rule_id
-#         r = _xml.create_xml_rule(root, str(rule.rule_id))
-#         # Generate pos number of positive packets for a rule
-#         _xml.generate_xml_packets_for_rule(r, rule, pos, True)
-#         # Generate neg number of negative packets for a rule
-#         _xml.generate_xml_packets_for_rule(r, rule, neg, False)
-#         print rule, "\n"
-#         
-#     print _xml.pretty_xml_format(root)
-
+        # Create a rule Element
+        rid = rule.rule_id
+        r = _xml.create_xml_rule(root, str(rule.rule_id))
+        # Generate pos number of positive packets for a rule
+        _xml.generate_xml_packets_for_rule(r, rule, pos, True)
+        # Generate neg number of negative packets for a rule
+        _xml.generate_xml_packets_for_rule(r, rule, neg, False)
+        print rule, "\n"
+            
+        print _xml.pretty_xml_format(root)
 
 
 if __name__ == '__main__': main()
