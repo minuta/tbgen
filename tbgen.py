@@ -677,10 +677,6 @@ def main():
     else:
         T.print_error_and_exit(message, error)
     
-    print "Normalized Rules : ------------- "
-    print norm_rules
-    print "---------------------------------"
-
     _xml = XML() 
     # Create a root Element
     root = Element('tests')
@@ -703,9 +699,8 @@ def main():
         _xml.generate_xml_packets_for_rule(r, rule, pos, True)
         # Generate neg number of negative packets for a rule
         _xml.generate_xml_packets_for_rule(r, rule, neg, False)
-        print rule, "\n"
             
-        print _xml.pretty_xml_format(root)
+    print _xml.pretty_xml_format(root)
 
 
 if __name__ == '__main__': main()
