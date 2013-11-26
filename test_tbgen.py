@@ -243,12 +243,27 @@ class TestInterval(object):
         assert x + y ==  y + x  == [Interval(1, 9)]
         assert x + z == [x, z]
 
-    def test_random_value(self):
-        I = Interval(1, 2)
+    def test_random_value1(self):
+        I = Interval(1, 1)
         x = I.random_value()
-        assert x == 1 or x == 2
+        assert x == 1
+  
+    def test_random_value2(self):
+        I = Interval(1, 3)
+        x = I.random_value()
+        assert x in [1, 2, 3]
+    
+    def test_random_neg_value1(self):
+        I = Interval(2, 4)
+        ok, x = I.random_neg_value(1, 6)
+        assert ok == True and x in [1, 5, 6]
 
+    def test_random_neg_value2(self):
+        I = Interval(2, 4)
+        ok, x = I.random_neg_value(2, 4)
+        assert ok == False and x in [2, 3, 4]
 
+    
 class TestIntervalList(object):
 
     def test_simple(self):
@@ -756,6 +771,10 @@ class TestRule(object):
                (sp in xrange(1, 30)) and (dp in xrange(1, 30)) and \
                pr == 4 and ac == PASS and rid == '2'
 
+    def test_sample_neg_packet(self):
+        I = Interval
+        rule = Rule(I(1, 5000), I(1, 6000), I(1, 30), I(1, 30), I(4, 4), PASS, '2') 
+
 
 class TestTools(object):
 
@@ -853,7 +872,6 @@ class TestTools(object):
         T = Tools()
         li = [[1, 2, 3], [4, 5], [7, 8, 9]]
         assert T.make_flat(li) == [1, 2, 3, 4, 5, 7, 8, 9]
-
 
     def test_make_independent_1(self):
         I = Interval

@@ -213,7 +213,6 @@ class Parser(object):
     def __init__(self, lines, ):
         self.lines = lines
 
-
     def parse(self):
         file_lines = self.lines
         rules = []
@@ -232,7 +231,6 @@ class Parser(object):
                     negs + list(str(rule_id))
             rules.append(RawRule(*args))
         return message, error, rules
-
 
     def check_negs(self, parts):
         """ Check for Field-Negators, remove them and return a boolean list of
@@ -413,7 +411,7 @@ class RawRule(object):
 
 
 class Rule(object):
-    """ Repr esents  a normalized firewall rule, i.e. there are no more negated
+    """ Represents  a normalized firewall rule, i.e. there are no more negated
         fields.
     """
     
@@ -495,6 +493,34 @@ class Rule(object):
             return sa, da, sp, dp, pr, self.action, self.rule_id 
         print_error_and_exit("Error : couldn't generate a negative packet for\
                 rule ", self) 
+
+class Packet(object):
+    
+    def __init__(self, sa, da, sp, dp, pr, ac, rid):
+        self.sa = sa
+        self.da = da
+        self.sp = sp
+        self.dp = dp
+        self.pr = pr
+        self.ac = ac
+        self.rid = rid
+
+    def __str__(self):
+        return "Packet:  %s %s %s %s %s %s %s" % (self.sa, self.da,
+               self.sp, self.dp, self.pr, self.ac, self.rid)
+
+    def __repr__(self):
+        return str(self)
+
+    def in_rule(self, rule):
+        I = Interval()
+        return  I(self.sa, self.sa).is_subinterval(rule.i1) and \
+                I(self.da, self.da).is_subinterval(rule.i2) and \
+                I(self.sp, self.sp).is_subinterval(rule.i3) and \
+                I(self.dp, self.dp).is_subinterval(rule.i4) and \
+                I(self.pr, self.pr).is_subinterval(rule.i5) and \
+                I(self.ac, self.ac).is_subinterval(rule.action) and \
+                I(self.pr, self.pr).is_subinterval(rule.rule_id)
 
 class Tools(object):
 
