@@ -498,7 +498,6 @@ class TestRule(object):
         r2 = Rule(I(7, 9), I(7, 9), I(7, 9), I(7, 9), I(7, 9), DROP, 1)
         assert r1 - r2 == [r1]
 
-
     # Tests, where Self contains Other : 
 
     # self, other differ in only 1 Dimension  (5 test-functions)
@@ -546,7 +545,6 @@ class TestRule(object):
         r3 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 2), DROP, 1)
         r4 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(6, 9), DROP, 1)
         assert r1 - r2 == [r3, r4]
-
 
     # self, other differ in 2 Dimensions (4 Tests)
     def test_self_contains_other_9(self):
@@ -670,7 +668,6 @@ class TestRule(object):
 
         assert r1 - r2 == [r3, r4, r5, r6, r7, r8, r9, r10]
 
-
     # self, other differ in 5 Dimensions (1 Test)
     def test_self_contains_other_15(self):
         I = Interval
@@ -689,7 +686,6 @@ class TestRule(object):
         r12= Rule(I(3, 5), I(3, 5), I(3, 5), I(3, 5), I(6, 9), DROP, 1)
 
         assert r1 - r2 == [r3, r4, r5, r6, r7, r8, r9, r10, r11, r12]
-
 
     # Tests, where Self and Other have an Intersection: 
     # in each case we get exactly 5 Rules
@@ -787,7 +783,6 @@ class TestRule(object):
                (p.sp not in xrange(1, 2 + 1)) or \
                (p.dp not in xrange(1, 2 + 1)) or \
                p.pr != 4 or p.ac != PASS or  p.rid == '2'
-               
 
 
 class TestTools(object):
@@ -934,7 +929,6 @@ class TestTools(object):
         r = Rule(I(16, 20), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 4)
 
         assert T.make_independent(2, rset) == [r]
-
 
 
 class Test_Packet(object):
