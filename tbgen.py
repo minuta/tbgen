@@ -638,7 +638,15 @@ class XML(object):
         src_port = SubElement(packet, 'src_port').text = sp
         dst_port = SubElement(packet, 'dst_port').text = dp
         protocol = SubElement(packet, 'protocol').text = pr
-        action = SubElement(packet, 'action').text = ac
+
+        if ac == 1:
+            act = 'PASS'
+        elif ac == 2:
+            act = 'DROP'
+        else:
+            act = str(ac)   
+        action = SubElement(packet, 'action').text = act
+
         match = SubElement(packet, 'match').text = ma
 
     def generate_xml_packets_for_rule(self, parent, rule, n, rule_affinity):
@@ -653,7 +661,7 @@ class XML(object):
                 p = rule.sample_neg_packet()
 
             self.create_xml_packet(parent, packet_aff + str(i), str(p.sa), \
-                    str(p.da), str(p.sp), str(p.dp), str(p.pr), str(p.ac), \
+                    str(p.da), str(p.sp), str(p.dp), str(p.pr), p.ac, \
                     str(rule_affinity)) 
 
 

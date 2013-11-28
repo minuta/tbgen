@@ -975,7 +975,7 @@ class Test_XML(object):
         assert f.name == fname
         xml_str = '<tests><rule id="1"><packet id="p1"><src_addr>1</src_addr>'+\
         '<dst_addr>1</dst_addr><src_port>1</src_port><dst_port>1</dst_port>'+\
-        '<protocol>1</protocol><action>2</action><match>True</match>'''+\
+        '<protocol>1</protocol><action>DROP</action><match>True</match>'''+\
         '</packet></rule></tests>'
         assert f.read() == xml_str
         f.close()
@@ -992,7 +992,7 @@ class Test_XML(object):
 
         xml_str = '<tests><rule id="1"><packet id="p1"><src_addr>1</src_addr>'+\
         '<dst_addr>1</dst_addr><src_port>1</src_port><dst_port>1</dst_port>'+\
-        '<protocol>1</protocol><action>2</action><match>True</match>'''+\
+        '<protocol>1</protocol><action>DROP</action><match>True</match>'''+\
         '</packet></rule></tests>'
         assert X.raw_xml_format(root) == xml_str
 
@@ -1013,7 +1013,7 @@ class Test_XML(object):
             <src_port>1</src_port>
             <dst_port>1</dst_port>
             <protocol>1</protocol>
-            <action>2</action>
+            <action>DROP</action>
             <match>True</match>
         </packet>
     </rule>
@@ -1061,14 +1061,16 @@ class Test_XML(object):
 
         generated = X.raw_xml_format(root) 
 
-        xml_str = '<tests><rule id="1"><packet id="p1"><src_addr>1</src_addr>' +\
-                '<dst_addr>1</dst_addr><src_port>1</src_port>' +\
-                '<dst_port>1</dst_port><protocol>1</protocol><action>2</action>' +\
-                '<match>True</match></packet><packet id="p2">' +\
-                '<src_addr>1</src_addr><dst_addr>1</dst_addr>' +\
-                '<src_port>1</src_port><dst_port>1</dst_port>' +\
-                '<protocol>1</protocol><action>2</action><match>True</match>' +\
-                '</packet></rule></tests>'
+        xml_str = \
+        '<tests><rule id="1"><packet id="p1"><src_addr>1</src_addr>'+\
+        '<dst_addr>1</dst_addr><src_port>1</src_port>' +\
+        '<dst_port>1</dst_port><protocol>1</protocol><action>DROP</action>'+\
+        '<match>True</match></packet><packet id="p2">' +\
+        '<src_addr>1</src_addr><dst_addr>1</dst_addr>' +\
+        '<src_port>1</src_port><dst_port>1</dst_port>' +\
+        '<protocol>1</protocol><action>DROP</action><match>True</match>'+\
+        '</packet></rule></tests>'
+
         assert xml_str == generated
 
 
