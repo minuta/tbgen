@@ -1,6 +1,9 @@
 from tbgen import Tools, Interval, IntervalList, Parser, RawRule,\
-        Rule, Packet, PASS, DROP, ERROR_STR1, ERROR_STR2,ERROR_STR3,\
+        Rule, Packet, XML, PASS, DROP, ERROR_STR1, ERROR_STR2,ERROR_STR3,\
         ERROR_STR4, ERROR_STR5, ERROR_STR7, OK, NMIN, NMAX
+
+from xml.etree.ElementTree import ElementTree, Element, SubElement, tostring
+
 import os, errno, pytest
 
 skip = pytest.mark.skipif
@@ -953,5 +956,120 @@ class Test_Packet(object):
         P = Packet
         p1 = P(3, 3, 3, 3, 3, DROP, 2)
         assert not p1.in_rule(r1)
+
+
+class Test_XML(object):
+
+    def test_write_xml_to_file(self):
+        I = Interval
+        r1 = Rule(I(1, 1), I(1, 1), I(1, 1), I(1, 1), I(1, 1), DROP, 1)
+
+        root = Element('tests')
+        X = XML()
+        r = X.create_xml_rule(root, str(r1.rule_id))
+        X.generate_xml_packets_for_rule(r, r1, 1, True)
+        fname = 'output.xml'
+        X.write_xml_to_file(root, fname)
+        
+        f = open(fname)
+        assert f.name == fname
+        xml_str = '<tests><rule id="1"><packet id="p1"><src_addr>1</src_addr>'+\
+        '<dst_addr>1</dst_addr><src_port>1</src_port><dst_port>1</dst_port>'+\
+        '<protocol>1</protocol><action>2</action><match>True</match>'''+\
+        '</packet></rule></tests>'
+        assert f.read() == xml_str
+        f.close()
+        os.remove(fname)
+
+    def test_raw_xml_format(self):
+        I = Interval
+        r1 = Rule(I(1, 1), I(1, 1), I(1, 1), I(1, 1), I(1, 1), DROP, 1)
+
+        root = Element('tests')
+        X = XML()
+        r = X.create_xml_rule(root, str(r1.rule_id))
+        X.generate_xml_packets_for_rule(r, r1, 1, True)
+
+        xml_str = '<tests><rule id="1"><packet id="p1"><src_addr>1</src_addr>'+\
+        '<dst_addr>1</dst_addr><src_port>1</src_port><dst_port>1</dst_port>'+\
+        '<protocol>1</protocol><action>2</action><match>True</match>'''+\
+        '</packet></rule></tests>'
+        assert X.raw_xml_format(root) == xml_str
+
+    def test_pretty_format(self):
+        I = Interval
+        r1 = Rule(I(1, 1), I(1, 1), I(1, 1), I(1, 1), I(1, 1), DROP, 1)
+
+        root = Element('tests')
+        X = XML()
+        r = X.create_xml_rule(root, str(r1.rule_id))
+        X.generate_xml_packets_for_rule(r, r1, 1, True)
+        xml_str = """<?xml version="1.0" ?>
+<tests>
+    <rule id="1">
+        <packet id="p1">
+            <src_addr>1</src_addr>
+            <dst_addr>1</dst_addr>
+            <src_port>1</src_port>
+            <dst_port>1</dst_port>
+            <protocol>1</protocol>
+            <action>2</action>
+            <match>True</match>
+        </packet>
+    </rule>
+</tests>
+"""
+        assert X.pretty_xml_format(root) == xml_str
+
+    def test_create_xml_rule(self):
+        I = Interval
+        r1 = Rule(I(1, 1), I(1, 1), I(1, 1), I(1, 1), I(1, 1), DROP, 1)
+
+        root = Element('tests')
+        X = XML()
+        r = X.create_xml_rule(root, str(r1.rule_id))
+        generated = X.raw_xml_format(root) 
+        xml_str = '<tests><rule id="1" /></tests>'
+        assert xml_str == generated
+
+    def test_create_xml_packet(self):
+        I = Interval
+        r1 = Rule(I(1, 1), I(1, 1), I(1, 1), I(1, 1), I(1, 1), DROP, 1)
+
+        root = Element('tests')
+        X = XML()
+        r = X.create_xml_rule(root, str(r1.rule_id))
+        X.create_xml_packet(r, 'p' + str(1), str(1), str(1), str(1), str(1),\
+                                     str(1), str(r1.action), str(DROP)) 
+     
+        generated = X.raw_xml_format(root) 
+        xml_str = '<tests><rule id="1"><packet id="p1"><src_addr>1</src_addr>' + \
+        '<dst_addr>1</dst_addr><src_port>1</src_port><dst_port>1</dst_port>' + \
+        '<protocol>1</protocol><action>2</action><match>2</match>' + \
+        '</packet></rule></tests>'
+        assert xml_str == generated
+
+    def test_generate_xml_packets_for_rule(self):
+        I = Interval
+        r1 = Rule(I(1, 1), I(1, 1), I(1, 1), I(1, 1), I(1, 1), DROP, 1)
+
+        root = Element('tests')
+        X = XML()
+        r = X.create_xml_rule(root, str(r1.rule_id))
+        
+        X.generate_xml_packets_for_rule(r, r1, 2, True) 
+
+        generated = X.raw_xml_format(root) 
+
+        xml_str = '<tests><rule id="1"><packet id="p1"><src_addr>1</src_addr>' +\
+                '<dst_addr>1</dst_addr><src_port>1</src_port>' +\
+                '<dst_port>1</dst_port><protocol>1</protocol><action>2</action>' +\
+                '<match>True</match></packet><packet id="p2">' +\
+                '<src_addr>1</src_addr><dst_addr>1</dst_addr>' +\
+                '<src_port>1</src_port><dst_port>1</dst_port>' +\
+                '<protocol>1</protocol><action>2</action><match>True</match>' +\
+                '</packet></rule></tests>'
+        assert xml_str == generated
+
 
 
