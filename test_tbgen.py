@@ -1,5 +1,5 @@
 from tbgen import Tools, Interval, IntervalList, Parser, RawRule,\
-        Rule, Packet, XML, PASS, DROP, ERROR_STR1, ERROR_STR2,ERROR_STR3,\
+        Rule, Packet, XML, TBGenError, PASS, DROP, ERROR_STR1, ERROR_STR2,ERROR_STR3,\
         ERROR_STR4, ERROR_STR5, ERROR_STR7, OK, NMIN, NMAX
 
 from xml.etree.ElementTree import ElementTree, Element, SubElement, tostring
@@ -409,7 +409,7 @@ class TestParser():
                 neg[2], neg[3], neg[4], r_id)
 
 #         message, error, lines = P.parse()
-        assert P.parse() == (OK, '', [r1])
+        assert P.parse() == [r1]
 
     def test_protocol_to_interval(self):
         assert self.p.protocol_to_interval([6, 255]) == Interval(6, 6)
@@ -793,18 +793,50 @@ class TestTools(object):
     def test_check_nums_of_tests(self):
         T = Tools()
         allowed = NMIN + 1
-        assert T.check_nums_of_tests(allowed, allowed) == (True, OK)
-        assert T.check_nums_of_tests(NMAX + 1, NMAX + 1) == (False, ERROR_STR1)
-        assert T.check_nums_of_tests(NMIN - 1, NMIN - 1) == (False, ERROR_STR1)
+        # Test 1
+        T.check_nums_of_tests(allowed, allowed)
 
-        assert T.check_nums_of_tests(NMIN, allowed) == (True, OK)
-        assert T.check_nums_of_tests(allowed, NMIN) == (True, OK)
+        # Test 2
+        with pytest.raises(TBGenError) as e:
+            T.check_nums_of_tests(NMAX + 1, NMAX + 1) 
+        assert ERROR_STR1 in str(e)
+        
+        # Test 3
+        with pytest.raises(TBGenError) as e:
+            T.check_nums_of_tests(NMAX + 1, NMAX + 1) 
+        assert ERROR_STR1 in str(e)
 
-        assert T.check_nums_of_tests(allowed, NMIN - 1) == (False, ERROR_STR1)
-        assert T.check_nums_of_tests(NMAX + 1, allowed) == (False, ERROR_STR1)
-        assert T.check_nums_of_tests(allowed, NMAX + 1) == (False, ERROR_STR1)
+        # Test 4
+        with pytest.raises(TBGenError) as e:
+            T.check_nums_of_tests(NMIN - 1, NMIN - 1)
+        assert ERROR_STR1 in str(e)
 
-        assert T.check_nums_of_tests(NMIN, NMIN) == (False, ERROR_STR2)
+        # Test 5
+        T.check_nums_of_tests(NMIN, allowed)
+
+        # Test 6
+        T.check_nums_of_tests(allowed, NMIN)
+
+        # Test 7
+        with pytest.raises(TBGenError) as e:
+            T.check_nums_of_tests(allowed, NMIN - 1)
+        assert ERROR_STR1 in str(e)
+
+        # Test 8
+        with pytest.raises(TBGenError) as e:
+            T.check_nums_of_tests(NMAX + 1, allowed)
+        assert ERROR_STR1 in str(e)
+
+        # Test 9
+        with pytest.raises(TBGenError) as e:
+            T.check_nums_of_tests(allowed, NMAX + 1)
+        assert ERROR_STR1 in str(e)
+
+        # Test 10
+        with pytest.raises(TBGenError) as e:
+            T.check_nums_of_tests(NMIN, NMIN)
+        assert ERROR_STR2 in str(e)
+
 
     def test_check_args(self):
         T = Tools()
@@ -814,33 +846,48 @@ class TestTools(object):
 
         # valid args
         args = [prog_name, ruleset, '10', '10']
-        assert T.check_args(args) == (ok, None, ruleset, 10, 10)
+        assert T.check_args(args) == (ruleset, 10, 10)
 
         # too many args 
         args = [prog_name, ruleset, '10', '10', '3']
-        assert T.check_args(args) == (ERROR_STR3 + ERROR_STR4, errno.EINVAL, None, 0, 0)
+        with pytest.raises(TBGenError) as e:
+            T.check_args(args) 
+        assert ERROR_STR3.rstrip(), ERROR_STR4 in str(e)
 
         # too few args
         args = [prog_name, ruleset, '10']
-        assert T.check_args(args) == (ERROR_STR3 + ERROR_STR4, errno.EINVAL, None, 0, 0)
+        with pytest.raises(TBGenError) as e:
+            T.check_args(args)
+        assert ERROR_STR3.rstrip(), ERROR_STR4 in str(e)
 
         # num-test-args are not numbers
         args = [prog_name, ruleset, 'a', 'b']
-        assert T.check_args(args) == (ERROR_STR7 + ERROR_STR4, errno.EINVAL, ruleset, 0, 0)
-
-        # Intergration with check_nums_of_tests()
-        pos, neg = ['1000000', '12']
-        args = [prog_name, ruleset, pos, neg]
-        ok, m = T.check_nums_of_tests(int(pos), int(neg))
-        assert T.check_args(args) == (m, errno.EINVAL, ruleset, int(pos), int(neg))
-
-
-
+        with pytest.raises(TBGenError) as e:
+            T.check_args(args)
+        assert ERROR_STR7.rstrip(), ERROR_STR4 in str(e)
 
         # File doesn't exist or is empty
         ruleset = 'foo_ruleset'
         args = [prog_name, ruleset, '10', '10']
-        assert T.check_args(args) == (ERROR_STR5, errno.ENOENT, ruleset, 10, 10)
+        with pytest.raises(TBGenError) as e:
+            T.check_args(args) 
+        assert ERROR_STR5.rstrip() in str(e)
+
+   
+    def test_check_nums_of_tests1(self):
+        T = Tools()
+        # Argument is NOT in a valid range
+        with pytest.raises(TBGenError) as e:
+            T.check_nums_of_tests(100000, 12)
+        assert ERROR_STR1 in str(e)
+
+    def test_check_nums_of_tests2(self):
+        T = Tools()
+        # Case a == b == 0
+        with pytest.raises(TBGenError) as e:
+            T.check_nums_of_tests(0, 0)
+        assert ERROR_STR2 in str(e)
+
 
     # Test at Index 0
     def test_dif(self):

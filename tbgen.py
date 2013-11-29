@@ -48,6 +48,13 @@ ERROR_STR7 = "Error : Wrong argument type!\n"
 #     def __ne__(self, other):
 #         return not self == other
 
+class TBGenError(Exception):
+    def __init__(self, m):
+        self.m = m
+
+    def __str__(self):
+        return self.m
+
 
 class Interval(object):
 
@@ -218,19 +225,16 @@ class Parser(object):
         rules = []
         error = ''
         message = OK
-#         T = Tools()
         for rule_id, line in enumerate(file_lines):
             parts = line.split()
             if len(parts) != 10:
-                message = ERROR_STR6 + str(rule_id)
-                error = errno.EINVAL 
-                return message, error, rules
+                raise TBGenError(ERROR_STR6 + str(rule_id))
             no_negs_list, negs = self.check_negs(parts)
 
             args = self.fields_to_intervals(no_negs_list, rule_id) +\
                     negs + list(str(rule_id))
             rules.append(RawRule(*args))
-        return message, error, rules
+        return rules
 
     def check_negs(self, parts):
         """ Check for Field-Negators, remove them and return a boolean list of
@@ -266,20 +270,20 @@ class Parser(object):
         def check_subnet(parts, msg):
             for i in parts[:-1]:
                 if i < 0 or i > 255:
-                    print_error_and_exit(msg + rule_str, errno.EINVAL)
+                    raise TBGenError(msg + rule_str)
             if parts[-1] <0 or parts[-1]>32:
-                print_error_and_exit(msg + "Invalid Mask" + rule_str, errno.EINVAL)
+                raise TBGenError(msg + "Invalid Mask" + rule_str)
 
         def check_port(parts, msg):
             for i in parts:
                 if i<MIN_PORT or i>MAX_PORT:
-                    print_error_and_exit(msg + rule_str, errno.EINVAL)
+                    raise TBGenError(msg + rule_str)
 
         def check_protocol(p):
             if p[0] < MIN_PROT or p[0] > MAX_PROT:
-                print_error_and_exit("Error : Invalid Procotol Number" + rule_str, errno.EINVAL)
+                raise TBGenError("Error : Invalid Procotol Number" + rule_str)
             if p[1] not in [0, 255]:
-                print_error_and_exit("Error : Invalid Protocol Mask" + rule_str, errno.EINVAL)
+                raise TBGenError("Error : Invalid Protocol Mask" + rule_str)
 
 
         src_host = split_subnet_str(fields[0])
@@ -303,8 +307,8 @@ class Parser(object):
         elif _action == 'PASS':
             action = PASS
         else:
-            print_error_and_exit("Error : '%s' is an unknown rule action!"\
-                    % _action + rule_str, errno.EINVAL)
+            raise TBGenError("Error : '%s' is an unknown rule action!"\
+                    % _action + rule_str)
 
         return [src_host, dst_host, src_port, dst_port, protocol, action]
                
@@ -490,9 +494,9 @@ class Rule(object):
         
         if ok_sa or ok_da or ok_sp or ok_dp or ok_pr:
             return Packet(sa, da, sp, dp, pr, self.action, self.rule_id)
-        print_error_and_exit("Error : couldn't generate a negative packet for\
-                rule ", self) 
-
+#         print_error_and_exit("Error : couldn't generate a negative packet for\
+#                 rule ", self) 
+        raise TBGenError("Error : couldn't generate a negative packet for rule ")
 
 class Packet(object):
     
@@ -527,16 +531,11 @@ class Tools(object):
 
     def check_nums_of_tests(self, a, b):
         """ Checks args, defining amount of pos. & neg. tests.  """
-        r = True
-        message = OK
         trange = range(NMIN, NMAX)
         if a == b == 0:
-            message = ERROR_STR2
-            r = False
+            raise TBGenError(ERROR_STR2)
         if a not in trange or b not in trange:
-            message = ERROR_STR1
-            r = False
-        return r, message
+            raise TBGenError(ERROR_STR1)
 
     def print_error_and_exit(self, message, error_num):
         print message
@@ -551,25 +550,19 @@ class Tools(object):
 
         if len(argv) == 4:
             fname = argv[1]
-
             if not argv[2].isdigit() or not argv[3].isdigit():
-                message = ERROR_STR7 + ERROR_STR4
-                error = errno.EINVAL
+                raise TBGenError(ERROR_STR7 + ERROR_STR4)
             else:
                 pos_tests = int(argv[2])
                 neg_tests = int(argv[3])
+                self.check_nums_of_tests(pos_tests, neg_tests)
 
-                ok, message2 = self.check_nums_of_tests(pos_tests, neg_tests)
-                if ok != True:
-                    message = message2
-                    error = errno.EINVAL
                 if not (os.path.exists(fname) and os.stat(fname).st_size != 0):
-                    message = ERROR_STR5
-                    error = errno.ENOENT
+                    raise TBGenError(ERROR_STR5)
         else:
-            message = ERROR_STR3 + ERROR_STR4
-            error = errno.EINVAL
-        return message, error, fname, pos_tests, neg_tests
+            raise TBGenError(ERROR_STR3 + ERROR_STR4)
+
+        return fname, pos_tests, neg_tests
 
     def make_flat(self, l):
         """ makes l, which is a list of lists a flat list """
@@ -670,20 +663,22 @@ class XML(object):
 def main():
 
     T = Tools()
-    message, error, fname, pos, neg = T.check_args(argv)
 
-    if message == OK:
-        with open(fname) as f:
-            lines = f.readlines()
-    else:
-        T.print_error_and_exit(message, error)
-    
-    P = Parser(lines) 
-    message, error, lines = P.parse()
-    if message == OK:
-        norm_rules = [l.normalize() for l in lines]
-    else:
-        T.print_error_and_exit(message, error)
+    try:
+        fname, pos, neg = T.check_args(argv)
+    except TBGenError as e:
+        T.print_error_and_exit(e.m, errno.EINVAL)
+
+    with open(fname) as f:
+        lines = f.readlines()
+   
+    try: 
+        P = Parser(lines) 
+        lines = P.parse()
+    except TBGenError as e:
+        T.print_error_and_exit(e.m, errno.EINVAL)
+
+    norm_rules = [l.normalize() for l in lines]
     
     _xml = XML() 
     # Create a root Element
@@ -712,7 +707,4 @@ def main():
 
 
 if __name__ == '__main__': main()
-
-
-# ----------------------- TESTS ---------------------------------------------
 
