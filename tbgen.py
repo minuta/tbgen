@@ -515,8 +515,9 @@ class Rule(object):
 #                 rule ", self) 
         raise TBGenError("Error : couldn't generate a negative packet for rule ")
 
+
 class Packet(object):
-    
+
     def __init__(self, sa, da, sp, dp, pr, ac, rid):
         self.sa = sa
         self.da = da

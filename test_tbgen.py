@@ -837,43 +837,51 @@ class TestTools(object):
             T.check_nums_of_tests(NMIN, NMIN)
         assert ERROR_STR2 in str(e)
 
-
     def test_check_args(self):
         T = Tools()
         prog_name = 'tbgen.py'
-        ruleset = 'test_rules.txt'  # should exist and be non-empty for this test!
         ok = 'ok'
 
+        line1 = "!192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 0x06/0xff DROP\n"
+        line2 = "192.151.11.17/0 15.0.120.4/24 1 : 100 1221 : 1221 0x06/0xff PASS\n"
+
+        fname = "just_a_temporary_test_ruleset"
+        with open(fname, "w+") as f:
+            f.write(line1+line2)
+            f.close()
+
         # valid args
-        args = [prog_name, ruleset, '10', '10']
-        assert T.check_args(args) == (ruleset, 10, 10)
+        args = [prog_name, fname, '10', '10']
+        assert T.check_args(args) == (fname, 10, 10)
 
         # too many args 
-        args = [prog_name, ruleset, '10', '10', '3']
+        args = [prog_name, fname, '10', '10', '3']
         with pytest.raises(TBGenError) as e:
-            T.check_args(args) 
+            T.check_args(args)
         assert ERROR_STR3.rstrip(), ERROR_STR4 in str(e)
 
         # too few args
-        args = [prog_name, ruleset, '10']
+        args = [prog_name, fname, '10']
         with pytest.raises(TBGenError) as e:
             T.check_args(args)
         assert ERROR_STR3.rstrip(), ERROR_STR4 in str(e)
 
         # num-test-args are not numbers
-        args = [prog_name, ruleset, 'a', 'b']
+        args = [prog_name, fname, 'a', 'b']
         with pytest.raises(TBGenError) as e:
             T.check_args(args)
         assert ERROR_STR7.rstrip(), ERROR_STR4 in str(e)
 
         # File doesn't exist or is empty
-        ruleset = 'foo_ruleset'
-        args = [prog_name, ruleset, '10', '10']
+        new_fname = 'foo_ruleset'   # a non existent file
+        args = [prog_name, new_fname, '10', '10']
         with pytest.raises(TBGenError) as e:
-            T.check_args(args) 
+            T.check_args(args)
         assert ERROR_STR5.rstrip() in str(e)
 
-   
+        from os import remove
+        remove(fname)
+
     def test_check_nums_of_tests1(self):
         T = Tools()
         # Argument is NOT in a valid range
@@ -1037,7 +1045,7 @@ class Test_XML(object):
         X.generate_xml_packets_for_rule(r, r1, 1, True)
         fname = 'output.xml'
         X.write_xml_to_file(root, fname)
-        
+
         f = open(fname)
         assert f.name == fname
         xml_str = '<tests><rule id="1"><packet id="p1"><src_addr>1</src_addr>'+\
