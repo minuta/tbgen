@@ -1,3 +1,18 @@
+# Usage: python tbgen.py <RuleSet-File> <Num of pos. Tests> <Num of neg. Tests>
+#
+# Output : Test Packets for given Rules in XML-Format
+# 
+# Note : 
+# 1) bounds for minimal and maximal number of tests are defined in section:
+#    "CONSTANTS" below.
+# 2) Rule format should have a following form :
+#    <src-net> <dst-net> <src-port> <dst-port> <protocol> <action>
+# 
+#    all first 5 fields can be negated via '!' character
+# 
+#    Example : 
+#         !192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 0x06/0xff DROP
+
 import os, pytest, errno
 from sys import argv
 from pdb import set_trace
