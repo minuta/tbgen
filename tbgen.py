@@ -232,8 +232,10 @@ class Parser(object):
             no_negs_list, negs = self.check_negs(parts)
 
             args = self.fields_to_intervals(no_negs_list, rule_id) +\
-                    negs + list(str(rule_id))
+                    negs + [str(rule_id)]
+            print rule_id, line   # DEBUGGING -------------------------
             rules.append(RawRule(*args))
+#             set_trace () # DEBUGGING --------------------------------
         return rules
 
     def check_negs(self, parts):
@@ -578,8 +580,12 @@ class Tools(object):
         """
         if index > 0:
             return_set = [rset[index]]
+#             set_trace()  # DEBUGGING ------------------------------------
             for i in rset[:index]:
-                return_set = filter(None, [rule - i for rule in return_set])[0]
+                try:
+                    return_set = filter(None, [rule - i for rule in return_set])[0]
+                except IndexError:
+                    return_set = []
             return return_set
         else:
             return [rset[0]]
@@ -593,9 +599,14 @@ class Tools(object):
         ret_set = []
         target_rules = rset[index]
         operator_rules = rset[:index]
+
+#         set_trace()  # DEBUGGING ------------------------------------
         for rule in target_rules:
             flat_set = self.make_flat(operator_rules + [[rule]])
-            ret_set.append(self.dif(len(flat_set) - 1, flat_set)[0]) 
+            try:
+                ret_set.append(self.dif(len(flat_set) - 1, flat_set)[0]) 
+            except IndexError:
+                ret_set = []
         return ret_set
 
 
@@ -684,26 +695,35 @@ def main():
     # Create a root Element
     root = Element('tests')
 
+    # DEBUGGING ---------------------------------
+#     i = 2
+#     result_rules = T.make_independent(i, norm_rules) 
+#     print i, len(result_rules)
+    # -------------------------------------------
+
+
+
     for i in xrange(len(norm_rules)):
         # ------- Generate Tests for ONLY one rule in initial rule-set ----
 
         result_rules = T.make_independent(i, norm_rules) 
-
-        # At this point we got a result-set of independent rules and
-        # ready for XML-Output
-
-        # choose a random rule from a result-set
-        q = randint(0, len(result_rules)-1)
-        rule = result_rules[q]
-
-        # Create a rule Element
-        r = _xml.create_xml_rule(root, str(rule.rule_id))
-        # Generate pos number of positive packets for a rule
-        _xml.generate_xml_packets_for_rule(r, rule, pos, True)
-        # Generate neg number of negative packets for a rule
-        _xml.generate_xml_packets_for_rule(r, rule, neg, False)
-            
-    print _xml.pretty_xml_format(root)
+        print i, len(result_rules)
+# 
+#         # At this point we got a result-set of independent rules and
+#         # ready for XML-Output
+# 
+#         # choose a random rule from a result-set
+#         q = randint(0, len(result_rules)-1)
+#         rule = result_rules[q]
+# 
+#         # Create a rule Element
+#         r = _xml.create_xml_rule(root, str(rule.rule_id))
+#         # Generate pos number of positive packets for a rule
+#         _xml.generate_xml_packets_for_rule(r, rule, pos, True)
+#         # Generate neg number of negative packets for a rule
+#         _xml.generate_xml_packets_for_rule(r, rule, neg, False)
+#             
+#     print _xml.pretty_xml_format(root)
 
 
 if __name__ == '__main__': main()
