@@ -945,6 +945,19 @@ class TestTools(object):
         rset = [r2, r1]
         assert T.dif(1, rset) == []
 
+#     @skip
+    def test_dif5(self):
+        I = Interval
+        T = Tools()
+
+        r1 = Rule(I(2, 3), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 0)
+        r2 = Rule(I(1, 5), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 1)
+        r3 = Rule(I(1, 5), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 1)
+
+        rset = [r3, r2, r1]
+        assert T.dif(1, rset) == []
+
+
     def test_make_flat(self):
         T = Tools()
         li = [[1, 2, 3], [4, 5], [7, 8, 9]]
@@ -973,9 +986,9 @@ class TestTools(object):
         r3 = Rule(I(1, 9), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 2)
         r4 = Rule(I(10, 15), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 2)
         r5 = Rule(I(1, 15), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 4)
-        
+
         rset = [[r1, r2], [r3, r4], [r5]]
-        
+
         #     p1 = T.dif(2, [r1, r2, r3])
         p1 = Rule(I(6, 9), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 2)
         #     p2 = T.dif(2, [r1, r2, r4])
@@ -1008,6 +1021,15 @@ class TestTools(object):
         rset = [[r2], [r1]]
         assert T.make_independent(1, rset) == []
 
+    def test_make_independent_5(self):
+        I = Interval
+        T = Tools()
+
+        r1 = Rule(I(2, 3), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 0)
+        r2 = Rule(I(1, 5), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 1)
+        r3 = Rule(I(1, 5), I(1, 5), I(1, 5), I(1, 5), I(1, 5), DROP, 1)
+        rset = [[r3], [r2], [r1]]
+        assert T.make_independent(1, rset) == []
 
 class Test_Packet(object):
 
