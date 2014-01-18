@@ -698,49 +698,72 @@ def main():
 
     with open(fname) as f:
         lines = f.readlines()
-   
-    try: 
-        P = Parser(lines) 
+
+    try:
+        P = Parser(lines)
         lines = P.parse()
     except TBGenError as e:
         T.print_error_and_exit(e.m, errno.EINVAL)
 
     norm_rules = [l.normalize() for l in lines]
-    
-    _xml = XML() 
+
+    _xml = XML()
     # Create a root Element
     root = Element('tests')
-
-    # DEBUGGING ---------------------------------
-#     i = 2
-#     result_rules = T.make_independent(i, norm_rules) 
-#     print i, len(result_rules)
-    # -------------------------------------------
-
 
 
     for i in xrange(len(norm_rules)):
         # ------- Generate Tests for ONLY one rule in initial rule-set ----
 
-        result_rules = T.make_independent(i, norm_rules) 
+        result_rules = T.make_independent(i, norm_rules)
+
+        # At this point we got a result-set of independent rules and
+        # ready for XML-Output
+
+        # choose a random rule from a result-set
+        q = randint(0, len(result_rules)-1)
+        rule = result_rules[q]
+
+        # Create a rule Element
+        r = _xml.create_xml_rule(root, str(rule.rule_id))
+        # Generate pos number of positive packets for a rule
+        _xml.generate_xml_packets_for_rule(r, rule, pos, True)
+        # Generate neg number of negative packets for a rule
+        _xml.generate_xml_packets_for_rule(r, rule, neg, False)
+
+    print _xml.pretty_xml_format(root)
+
+
+def main_debug():
+    """ used for Analysis of generated independent rules """
+    T = Tools()
+
+    try:
+        fname, pos, neg = T.check_args(argv)
+    except TBGenError as e:
+        T.print_error_and_exit(e.m, errno.EINVAL)
+
+    with open(fname) as f:
+        lines = f.readlines()
+
+    try:
+        P = Parser(lines)
+        lines = P.parse()
+    except TBGenError as e:
+        T.print_error_and_exit(e.m, errno.EINVAL)
+
+    norm_rules = [l.normalize() for l in lines]
+
+    for i in xrange(len(norm_rules)):
+        # ------- Generate Tests for ONLY one rule in initial rule-set ----
+
+        result_rules = T.make_independent(i, norm_rules)
+
+        # print ID of parent rule and corresponding 'independent' rules
         print i, len(result_rules)
-# 
-#         # At this point we got a result-set of independent rules and
-#         # ready for XML-Output
-# 
-#         # choose a random rule from a result-set
-#         q = randint(0, len(result_rules)-1)
-#         rule = result_rules[q]
-# 
-#         # Create a rule Element
-#         r = _xml.create_xml_rule(root, str(rule.rule_id))
-#         # Generate pos number of positive packets for a rule
-#         _xml.generate_xml_packets_for_rule(r, rule, pos, True)
-#         # Generate neg number of negative packets for a rule
-#         _xml.generate_xml_packets_for_rule(r, rule, neg, False)
-#             
-#     print _xml.pretty_xml_format(root)
+
 
 
 if __name__ == '__main__': main()
+# if __name__ == '__main__': main_debug()
 
