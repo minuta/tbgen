@@ -732,7 +732,6 @@ def main():
             # Generate neg number of negative packets for a rule
             _xml.generate_xml_packets_for_rule(r, rule, neg, False)
 
-        # Rules, which have no corresponding independ.rules, will be ignored
     print _xml.pretty_xml_format(root)
 
 
@@ -766,7 +765,6 @@ def main_debug():
         print i, len(result_rules)
 
 
-
-# if __name__ == '__main__': main()
-if __name__ == '__main__': main_debug()
+if __name__ == '__main__': main()
+# if __name__ == '__main__': main_debug()
 
