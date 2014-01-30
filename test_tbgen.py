@@ -266,7 +266,7 @@ class TestInterval(object):
         ok, x = I.random_neg_value(2, 4)
         assert ok == False and x in [2, 3, 4]
 
-    
+
 class TestIntervalList(object):
 
     def test_simple(self):
@@ -347,54 +347,53 @@ class TestParser():
         except OSError:
             pass
 
-    def test_check_negs(self):
+    def test_check_negs1(self):
         new_line, negs = self.p.check_negs( ['!192.151.11.17/32', \
-                '15.0.120.4/32', '!10', ':', '655',\
-                '1221', ':', '1221', '0x06/0xff'] )
+                '15.0.120.4/32', '!10:655',\
+                '1221:1221', '6', '->', 'PASS'] )
+
+
         assert new_line == ['192.151.11.17/32', '15.0.120.4/32',\
-                           '10', ':', '655', '1221', ':', '1221',\
-                           '0x06/0xff']
+                           '10:655', '1221:1221', '6', '->', 'PASS']
         assert negs == [True, False, True, False, False]
 
+    def test_check_negs2(self):
         new_line, negs = self.p.check_negs( ['192.151.11.17/32',\
-                '15.0.120.4/32', '10', ':', '655',\
-                '1221', ':', '1221', '0x06/0xff'] ) 
+                '15.0.120.4/32', '10:655', '1221:1221', '6',\
+                '->', 'PASS'] )
         assert new_line == ['192.151.11.17/32', '15.0.120.4/32',\
-                           '10', ':', '655', '1221', ':', '1221',\
-                           '0x06/0xff'] 
+                           '10:655', '1221:1221', '6', '->', 'PASS']
         assert negs == [False, False, False, False, False]
 
+    def test_check_negs3(self):
         new_line, negs = self.p.check_negs( ['!192.151.11.17/32',\
-                '!15.0.120.4/32', '!10', ':', '655',\
-                '!1221', ':', '1221', '!0x06/0xff'] ) 
+                '!15.0.120.4/32', '!10:655', '!1221:1221', '!6', '->', 'DROP'] )
         assert new_line == ['192.151.11.17/32', '15.0.120.4/32',\
-                           '10', ':', '655', '1221', ':', '1221',\
-                           '0x06/0xff']
+                '10:655', '1221:1221', '6', '->', 'DROP']
         assert negs == [True, True, True, True, True]
 
+
     def test_fields_to_intervals(self):
-        f = ['192.151.11.17/32', '15.0.120.4/32',\
-                           '10', ':', '655', '1221', ':', '1221',\
-                           '0x06/0xff', 'DROP'] 
+        f = ['192.151.11.17/32', '15.0.120.4/32', '10:655', '1221:1221',\
+                           '6', '->', 'DROP']
         assert self.p.fields_to_intervals(f, '1') ==\
                 [ Interval(3231124241, 3231124241),\
                   Interval(251688964, 251688964), Interval(10, 655),\
                   Interval(1221, 1221), Interval(6, 6), DROP ]
 
     def test_get_fields(self):
-        rule = """192.151.11.17/32 15.0.120.4/32 10 : 655 1221 : 1221\
-                0x06/0xff DROP"""
+        rule = "192.151.11.17/32 15.0.120.4/32 10:655 1221:1221 6 -> DROP"
         parts = rule.split()
         assert self.p.get_fields(parts, '1') == [ [192, 151, 11, 17, 32],
                                             [15, 0, 120, 4, 32],
                                             [10, 655],
                                             [1221, 1221],
-                                            [6, 255],
+                                            6,
                                             DROP ]
 
 
     def test_parse(self):
-        lines = ["!192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 0x06/0xff DROP"]
+        lines = ["!192.151.11.17/32 15.0.120.4/32 !10:655 1221:1221 6 -> DROP"]
         P = Parser(lines)
         sh = Interval(3231124241, 3231124241)
         dh = Interval(251688964, 251688964)
@@ -404,15 +403,14 @@ class TestParser():
         r_id = '0'
         action = DROP
         neg = [1, 0, 1, 0, 0]
-        
+
         r1 = RawRule(sh, dh, sp, dp, prot, action, neg[0], neg[1],\
                 neg[2], neg[3], neg[4], r_id)
 
-#         message, error, lines = P.parse()
         assert P.parse() == [r1]
 
     def test_protocol_to_interval(self):
-        assert self.p.protocol_to_interval([6, 255]) == Interval(6, 6)
+        assert self.p.protocol_to_interval(6) == Interval(6, 6)
 
     def test_port_to_interval(self):
         assert self.p.port_to_interval([1221, 1221]) == Interval(1221, 1221)

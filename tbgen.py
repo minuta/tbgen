@@ -11,7 +11,7 @@
 #    all first 5 fields can be negated via '!' character
 # 
 #    Example : 
-#         !192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 0x06/0xff DROP
+#         !192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 !6  -> DROP
 
 import os, pytest, errno
 from sys import argv
@@ -43,12 +43,12 @@ ERROR_STR1 = "Error : some args are not in allowed range (%i, %i)" %(NMIN, NMAX)
 ERROR_STR2 = 'Error : you haven\'t specified any valid number of tests...'
 ERROR_STR3 = "Error : Invalid args!\n"
 
-ERROR_STR41 = '<Num of positive Tests> <Num of negative Tests>' 
-ERROR_STR4 = 'Usage: python %s <Firewall-Rule-Set-File>' % argv[0] + ERROR_STR41
+ERROR_STR41 = '<Num of positive Tests> <Num of negative Tests>'
+ERROR_STR4 = 'Usage: python %s <Firewall-Rule-Set-File> ' % argv[0] + ERROR_STR41
 
 ERROR_STR5 = 'Error : File doesn\'t exist or is empty!\n'
 ERROR_STR6 = 'Error : Invalid Rule Structure in Rule : '
-ERROR_STR7 = "Error : Wrong argument type!\n" 
+ERROR_STR7 = "Error : Wrong argument type!\n"
 
 # --------------------------------------------------------------------
 
@@ -78,7 +78,7 @@ class Interval(object):
         self.b = b
 
     def __repr__(self):
-        return '[%s : %s]' %(self.a, self.b)
+        return '[%s:%s]' %(self.a, self.b)
 
     def __eq__(self, other):
         if not isinstance(other, Interval):
@@ -242,15 +242,15 @@ class Parser(object):
         message = OK
         for rule_id, line in enumerate(file_lines):
             parts = line.split()
-            if len(parts) != 10:
+
+            if len(parts) != 7:
                 raise TBGenError(ERROR_STR6 + str(rule_id))
             no_negs_list, negs = self.check_negs(parts)
 
             args = self.fields_to_intervals(no_negs_list, rule_id) +\
                     negs + [str(rule_id)]
-#             print rule_id, line   # DEBUGGING -------------------------
+
             rules.append(RawRule(*args))
-#             set_trace () # DEBUGGING --------------------------------
         return rules
 
     def check_negs(self, parts):
@@ -258,7 +258,7 @@ class Parser(object):
             negated and not negated fields
         """
         res = []
-        for i in (0, 1, 2, 5, 8):   # Index-Set of negatable fields
+        for i in (0, 1, 2, 3, 4):   # Index-Set of negatable fields
             if parts[i][0] == '!':
                 res.append(True)
                 parts[i] = parts[i][1:]
@@ -297,11 +297,8 @@ class Parser(object):
                     raise TBGenError(msg + rule_str)
 
         def check_protocol(p):
-            if p[0] < MIN_PROT or p[0] > MAX_PROT:
+            if p < MIN_PROT or p > MAX_PROT:
                 raise TBGenError("Error : Invalid Procotol Number" + rule_str)
-            if p[1] not in [0, 255]:
-                raise TBGenError("Error : Invalid Protocol Mask" + rule_str)
-
 
         src_host = split_subnet_str(fields[0])
         check_subnet(src_host, "Error : Invalid Source Net! ")
@@ -309,16 +306,16 @@ class Parser(object):
         dst_host = split_subnet_str(fields[1])
         check_subnet(dst_host, "Error : Invalid Destination Net! ")
 
-        src_port = [int(fields[2]), int(fields[4])]
+        src_port = [int(i) for i in fields[2].split(':')]
         check_port(src_port, "Error : Invalid Source Port")
 
-        dst_port = [int(fields[5]), int(fields[7])]
+        dst_port = [int(i) for i in fields[3].split(':')]
         check_port(dst_port, "Error : Invalid Destination Port")
 
-        protocol = [int(x, 0) for x in fields[8].split('/')]
-        check_protocol(protocol)
+        prot_nr = int(fields[4])
+        check_protocol(prot_nr)
 
-        _action = fields[9]
+        _action = fields[6]
         if _action == 'DROP':
             action = DROP
         elif _action == 'PASS':
@@ -327,12 +324,10 @@ class Parser(object):
             raise TBGenError("Error : '%s' is an unknown rule action!"\
                     % _action + rule_str)
 
-        return [src_host, dst_host, src_port, dst_port, protocol, action]
-               
-    def protocol_to_interval(self, protocol):
-        if protocol[1] == 0:
-            return Interval(MIN_PROT, MAX_PROT)
-        return Interval(protocol[0], protocol[0])
+        return [src_host, dst_host, src_port, dst_port, prot_nr, action]
+
+    def protocol_to_interval(self, prot_nr):
+        return Interval(prot_nr, prot_nr)
 
     def port_to_interval(self, field):
         a, b = field
@@ -765,6 +760,28 @@ def main_debug():
         print i, len(result_rules)
 
 
-if __name__ == '__main__': main()
+def main_debug2():
+
+    T = Tools()
+
+    try:
+        fname, pos, neg = T.check_args(argv)
+    except TBGenError as e:
+        T.print_error_and_exit(e.m, errno.EINVAL)
+
+    with open(fname) as f:
+        lines = f.readlines()
+
+    try:
+        P = Parser(lines)
+        lines = P.parse()
+    except TBGenError as e:
+        T.print_error_and_exit(e.m, errno.EINVAL)
+
+    for i,line in enumerate(lines):
+        print i, line,'\n' 
+
+# if __name__ == '__main__': main()
 # if __name__ == '__main__': main_debug()
+if __name__ == '__main__': main_debug2()
 
