@@ -1,16 +1,16 @@
-# Usage: python tbgen.py <RuleSet-File> <Num of pos. Tests> <Num of neg. Tests>
+# Usage: python tbgen.py <ruleset-file> <num of pos.tests> <num of neg.tests>
 #
-# Output : Test Packets for given Rules in XML-Format
-# 
-# Note : 
-# 1) bounds for minimal and maximal number of tests are defined in section:
+# Output : test packets for given rules in XML-format
+#
+# Note :
+# 1) Bounds for minimal and maximal number of tests are defined in section:
 #    "CONSTANTS" below.
 # 2) Rule format should have a following form :
-#    <src-net> <dst-net> <src-port> <dst-port> <protocol> <action>
-# 
+#    <src-net> <dst-net> <src-port> <dst-port> <protocol> "->" <action>
+#
 #    all first 5 fields can be negated via '!' character
-# 
-#    Example : 
+#
+#    Example :
 #         !192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 !6  -> DROP
 
 import os, pytest, errno
@@ -23,22 +23,29 @@ from xml.dom import minidom
 skip = pytest.mark.skipif
 
 # -------------- CONSTANTS --------------------------------------
+# Firewall actions
 PASS = 1
 DROP = 2
 
-
+# minimal/maximal IP-address in int-representation
 MIN_ADDR = 0
 MAX_ADDR = int(2 ** 32 - 1)
 
+# minimal/maximal port number
 MIN_PORT = 0
 MAX_PORT = int(2 ** 16 - 1)
 
+# minimal/maximal protocol number
 MIN_PROT = 0
 MAX_PROT = int(2 ** 8 - 1)
 
-NMIN = 0          # Minimal number of tests
-NMAX = 1000       # Maximal number of tests
+# minimal/maximal number of tests
+NMIN = 0
+NMAX = 1000
+
 OK = 'ok'
+
+# Error strings for Class "TBGenError"
 ERROR_STR1 = "Error : some args are not in allowed range (%i, %i)" %(NMIN, NMAX)
 ERROR_STR2 = 'Error : you haven\'t specified any valid number of tests...'
 ERROR_STR3 = "Error : Invalid args!\n"
@@ -52,18 +59,9 @@ ERROR_STR7 = "Error : Wrong argument type!\n"
 
 # --------------------------------------------------------------------
 
-# class Action(object):
-#     
-#     def __init__(self, action_id):
-#         self.action_id = action_id
-# 
-#     def __eq__(self, other):
-#         return self.action_id == other.action_id
-# 
-#     def __ne__(self, other):
-#         return not self == other
-
 class TBGenError(Exception):
+    """ Class "TBGenError" defines custom exceptions.
+    """
     def __init__(self, m):
         self.m = m
 
@@ -72,7 +70,9 @@ class TBGenError(Exception):
 
 
 class Interval(object):
-
+    """ Class "Interval" defines a closed interval of form [a, b] and methods
+        for working with intervals like union, difference, intersection, etc.
+    """
     def  __init__(self, a, b):
         self.a = a
         self.b = b
@@ -170,12 +170,15 @@ class Interval(object):
 
     def random_neg_value(self, range_min, range_max):
         if self == Interval(range_min, range_max):
-            return False, self.random_value() 
+            return False, self.random_value()
         i = self.negate(range_min, range_max)
         return True, i[0].random_value()
 
 
 class IntervalList(object):
+    """ Class "IntervalList" makes possible to operate with lists of intervals, 
+        Operators are addition, difference, etc.
+    """
 
     def __init__(self, intervals):
         # intervals is a Python list of Interval objects
@@ -216,7 +219,7 @@ class IntervalList(object):
         if len(self) != len(other):
             return False
         for i in range(0, len(self)):
-            if self.get_interval(i) not in other.intervals: 
+            if self.get_interval(i) not in other.intervals:
                 return False
         return True
 
@@ -231,6 +234,9 @@ class IntervalList(object):
 
 
 class Parser(object):
+    """ Class "Parser" gets a list of raw lines from a ruleset-file and returns
+        a list of Rawrule-objects.
+    """
 
     def __init__(self, lines, ):
         self.lines = lines
@@ -347,6 +353,10 @@ class Parser(object):
 
 
 class RawRule(object):
+    """ Class "RawRule" takes a parsed rule data and normalizes it. "normalize" 
+        means a rule will be transformed to an equivalent rule/rules
+        without negations. We get a list of Rule-objects as output.
+    """
 
     def __init__(self, src_host, dst_host, src_port, dst_port, protocol,\
                 action, src_host_neg, dst_host_neg, src_port_neg,\
@@ -396,7 +406,7 @@ class RawRule(object):
     def __str__(self):
         s1 = "RawRule: sn%s dn%s sp%s dp%s prot%s"\
         % (self.src_host, self.dst_host, self.src_port, self.dst_port,
-                   self.protocol) 
+                   self.protocol)
         s2 = " id(%s) action(%s) neg(%i %i %i %i %i)"\
                % (self.rule_id, self.action, self.src_host_neg,
                    self.dst_host_neg, self.src_port_neg, self.dst_port_neg,
@@ -420,7 +430,7 @@ class RawRule(object):
         self.src_port_neg == other.src_port_neg and\
         self.dst_port_neg == other.dst_port_neg and\
         self.prot_neg     == other.prot_neg and\
-        self.rule_id == other.rule_id 
+        self.rule_id == other.rule_id
 
     def __ne__(self, other):
         return not self == other
@@ -430,7 +440,7 @@ class Rule(object):
     """ Represents  a normalized firewall rule, i.e. there are no more negated
         fields.
     """
-    
+
     def __init__(self, src_net, dst_net, src_ports, dst_ports, prots,\
                        action, rule_id):
         self.i1 = src_net
@@ -503,24 +513,27 @@ class Rule(object):
         ok_sp, sp = self.i3.random_neg_value(MIN_PORT, MAX_PORT)
         ok_dp, dp = self.i4.random_neg_value(MIN_PORT, MAX_PORT)
         ok_pr, pr = self.i5.random_neg_value(MIN_PROT, MAX_PROT)
-        
+
         if ok_sa or ok_da or ok_sp or ok_dp or ok_pr:
             return Packet(sa, da, sp, dp, pr, self.action, self.rule_id)
 #         print_error_and_exit("Error : couldn't generate a negative packet for\
-#                 rule ", self) 
+#                 rule ", self)
         raise TBGenError("Error : couldn't generate a negative packet for rule ")
 
 
 class Packet(object):
+    """ Class "Packet" defines a single packet in a firewall rule and 
+        its characteristics, like source/destination, protocol, action, rule id.
+    """
 
     def __init__(self, sa, da, sp, dp, pr, ac, rid):
-        self.sa = sa
-        self.da = da
-        self.sp = sp
-        self.dp = dp
-        self.pr = pr
-        self.ac = ac
-        self.rid = rid
+        self.sa = sa    # source address
+        self.da = da    # destination address
+        self.sp = sp    # source port
+        self.dp = dp    # destination port
+        self.pr = pr    # protocol
+        self.ac = ac    # action
+        self.rid = rid  # rule id for this packet
 
     def __str__(self):
         return "Packet:  %s %s %s %s %s %s %s" % (self.sa, self.da,
@@ -541,7 +554,9 @@ class Packet(object):
 
 
 class Tools(object):
-
+    """ Class "Tools" has some extra class-independent functions, which can't
+        be assigned to other classes.
+    """
     def check_nums_of_tests(self, a, b):
         """ Checks args, defining amount of pos. & neg. tests.  """
         trange = range(NMIN, NMAX)
@@ -582,7 +597,7 @@ class Tools(object):
         return [item for sublist in l for item in sublist]
 
     def dif(self, index, rset):
-        """ Difference of a rule at given index "index" in rset with rules of rset 
+        """ Difference of a rule at given index "index" in rset with rules of rset
             between index 0 and "index". rset is a Flat-List!
             As output we get an unnested list of rules like :
             [... [[[r-r1]-r2]-r3]-... - rn]
@@ -591,7 +606,6 @@ class Tools(object):
         """
         if index > 0:
             return_set = [rset[index]]
-#             set_trace()  # DEBUGGING ------------------------------------
             for i in rset[:index]:
                 try:
                     return_set = filter(None, [rule - i for rule in return_set])[0]
@@ -611,17 +625,18 @@ class Tools(object):
         target_rules = rset[index]
         operator_rules = rset[:index]
 
-#         set_trace()  # DEBUGGING ------------------------------------
         for rule in target_rules:
             flat_set = self.make_flat(operator_rules + [[rule]])
             try:
-                ret_set.append(self.dif(len(flat_set) - 1, flat_set)[0]) 
+                ret_set.append(self.dif(len(flat_set) - 1, flat_set)[0])
             except IndexError:
                 ret_set = []
         return ret_set
 
 
 class XML(object):
+    """ Class "XML" creates an XML-file for a given rules and packets.
+    """
 
     def write_xml_to_file(self, root, fname):
         """ wrap root in an ElementTree instance, and save as XML. """
@@ -659,13 +674,13 @@ class XML(object):
         elif ac == 2:
             act = 'DROP'
         else:
-            act = str(ac)   
+            act = str(ac)
         action = SubElement(packet, 'action').text = act
 
         match = SubElement(packet, 'match').text = ma
 
     def generate_xml_packets_for_rule(self, parent, rule, n, rule_affinity):
-        """ Generates n positive or negative Packets (via rule_affinity) 
+        """ Generates n positive or negative Packets (via rule_affinity)
             for rule 'rule' and Node 'parent'. """
         for i in xrange(1, n+1):
             if rule_affinity == True:
@@ -677,7 +692,7 @@ class XML(object):
 
             self.create_xml_packet(parent, packet_aff + str(i), str(p.sa), \
                     str(p.da), str(p.sp), str(p.dp), str(p.pr), p.ac, \
-                    str(rule_affinity)) 
+                    str(rule_affinity))
 
 
 # ------------------------ MAIN ---------------------------------------------
@@ -686,6 +701,7 @@ def main():
 
     T = Tools()
 
+    # Getting input parameters
     try:
         fname, pos, neg = T.check_args(argv)
     except TBGenError as e:
@@ -700,6 +716,7 @@ def main():
     except TBGenError as e:
         T.print_error_and_exit(e.m, errno.EINVAL)
 
+    # Normalize rules : negate all rule-fields with the negation mark.
     norm_rules = [l.normalize() for l in lines]
 
     _xml = XML()
@@ -779,9 +796,9 @@ def main_debug2():
         T.print_error_and_exit(e.m, errno.EINVAL)
 
     for i,line in enumerate(lines):
-        print i, line,'\n' 
+        print i, line,'\n'
 
-# if __name__ == '__main__': main()
+if __name__ == '__main__': main()
 # if __name__ == '__main__': main_debug()
-if __name__ == '__main__': main_debug2()
+# if __name__ == '__main__': main_debug2()
 
