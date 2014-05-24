@@ -13,7 +13,9 @@
 #    Example :
 #         !192.151.11.17/32 15.0.120.4/32 !10 : 655 1221 : 1221 !6  -> DROP
 
-import os, pytest, errno
+import os
+import pytest
+import errno
 from sys import argv
 from pdb import set_trace
 from random import randint
@@ -46,18 +48,19 @@ NMAX = 1000
 OK = 'ok'
 
 # Error strings for Class "TBGenError"
-ERROR_STR1 = "Error : some args are not in allowed range (%i, %i)" %(NMIN, NMAX)
+ERROR_STR1 = "Error : some args are not in allowed range\
+        (%i, %i)" % (NMIN, NMAX)
 ERROR_STR2 = 'Error : you haven\'t specified any valid number of tests...'
 ERROR_STR3 = "Error : Invalid args!\n"
 
 ERROR_STR41 = '<Num of positive Tests> <Num of negative Tests>'
-ERROR_STR4 = 'Usage: python %s <Firewall-Rule-Set-File> ' % argv[0] + ERROR_STR41
+ERROR_STR4 = 'Usage: python %s <Firewall-Rule-Set-File> ' % argv[0]+ERROR_STR41
 
 ERROR_STR5 = 'Error : File doesn\'t exist or is empty!\n'
 ERROR_STR6 = 'Error : Invalid Rule Structure in Rule : '
 ERROR_STR7 = "Error : Wrong argument type!\n"
-
 # --------------------------------------------------------------------
+
 
 class TBGenError(Exception):
     """ Class "TBGenError" defines custom exceptions.
@@ -73,12 +76,12 @@ class Interval(object):
     """ Class "Interval" defines a closed interval of form [a, b] and methods
         for working with intervals like union, difference, intersection, etc.
     """
-    def  __init__(self, a, b):
+    def __init__(self, a, b):
         self.a = a
         self.b = b
 
     def __repr__(self):
-        return '[%s:%s]' %(self.a, self.b)
+        return '[%s:%s]' % (self.a, self.b)
 
     def __eq__(self, other):
         if not isinstance(other, Interval):
@@ -130,8 +133,8 @@ class Interval(object):
 
             if other.is_subinterval(self):      # other is Subinterval of self
                 if not self.has_identical_borders(other):
-                    return [Interval(self.a, other.a - 1), \
-                           Interval(other.b + 1, self.b)]
+                    return [Interval(self.a, other.a - 1),
+                            Interval(other.b + 1, self.b)]
                 elif self.a == other.a:
                     return [Interval(other.b + 1, self.b)]
                 else:
@@ -153,7 +156,7 @@ class Interval(object):
                 return [other]
             if self.a < other.a:
                 return [Interval(other.a, self.b)]
-            else :
+            else:
                 return [Interval(self.a, other.b)]
         else:
             return []
@@ -176,7 +179,7 @@ class Interval(object):
 
 
 class IntervalList(object):
-    """ Class "IntervalList" makes possible to operate with lists of intervals, 
+    """ Class "IntervalList" makes possible to operate with lists of intervals,
         Operators are addition, difference, etc.
     """
 
@@ -215,7 +218,7 @@ class IntervalList(object):
     def __eq__(self, other):
         if not isinstance(other, IntervalList):
             raise ValueError("%s cannot be compared to IntervalList object!"
-                    % other)
+                             % other)
         if len(self) != len(other):
             return False
         for i in range(0, len(self)):
@@ -227,10 +230,10 @@ class IntervalList(object):
         return not self == other
 
     def __str__(self):
-        return '%s' %(self.intervals)
+        return '%s' % (self.intervals)
 
     def __repr__(self):
-        return '%s' %(self.intervals)
+        return '%s' % (self.intervals)
 
 
 class Parser(object):
@@ -253,8 +256,8 @@ class Parser(object):
                 raise TBGenError(ERROR_STR6 + str(rule_id))
             no_negs_list, negs = self.check_negs(parts)
 
-            args = self.fields_to_intervals(no_negs_list, rule_id) +\
-                    negs + [str(rule_id)]
+            args = self.fields_to_intervals(no_negs_list, rule_id) + negs +\
+                [str(rule_id)]
 
             rules.append(RawRule(*args))
         return rules
@@ -294,12 +297,12 @@ class Parser(object):
             for i in parts[:-1]:
                 if i < 0 or i > 255:
                     raise TBGenError(msg + rule_str)
-            if parts[-1] <0 or parts[-1]>32:
+            if parts[-1] < 0 or parts[-1] > 32:
                 raise TBGenError(msg + "Invalid Mask" + rule_str)
 
         def check_port(parts, msg):
             for i in parts:
-                if i<MIN_PORT or i>MAX_PORT:
+                if i < MIN_PORT or i > MAX_PORT:
                     raise TBGenError(msg + rule_str)
 
         def check_protocol(p):
@@ -327,8 +330,8 @@ class Parser(object):
         elif _action == 'PASS':
             action = PASS
         else:
-            raise TBGenError("Error : '%s' is an unknown rule action!"\
-                    % _action + rule_str)
+            raise TBGenError("Error : '%s' is an unknown rule action!"
+                             % _action + rule_str)
 
         return [src_host, dst_host, src_port, dst_port, prot_nr, action]
 
@@ -353,14 +356,14 @@ class Parser(object):
 
 
 class RawRule(object):
-    """ Class "RawRule" takes a parsed rule data and normalizes it. "normalize" 
+    """ Class "RawRule" takes a parsed rule data and normalizes it. "normalize"
         means a rule will be transformed to an equivalent rule/rules
         without negations. We get a list of Rule-objects as output.
     """
 
-    def __init__(self, src_host, dst_host, src_port, dst_port, protocol,\
-                action, src_host_neg, dst_host_neg, src_port_neg,\
-                dst_port_neg, prot_neg, rule_id):
+    def __init__(self, src_host, dst_host, src_port, dst_port, protocol,
+                 action, src_host_neg, dst_host_neg, src_port_neg,
+                 dst_port_neg, prot_neg, rule_id):
         self.src_host = src_host
         self.dst_host = dst_host
         self.src_port = src_port
@@ -371,11 +374,11 @@ class RawRule(object):
         self.dst_host_neg = dst_host_neg
         self.src_port_neg = src_port_neg
         self.dst_port_neg = dst_port_neg
-        self.prot_neg     = prot_neg
+        self.prot_neg = prot_neg
         self.rule_id = rule_id
 
     def _negate(self, field, min_value, max_value, neg_state):
-        if neg_state == False:
+        if neg_state is False:
             return [field]
         return field.negate(min_value, max_value)
 
@@ -383,34 +386,34 @@ class RawRule(object):
         """ Returns a list of normalized Rule objects.
         """
         rules = []
-        src_nets = self._negate(self.src_host, MIN_ADDR, MAX_ADDR,\
-                self.src_host_neg)
-        dst_nets = self._negate(self.dst_host, MIN_ADDR, MAX_ADDR,\
-                self.dst_host_neg)
-        src_ports = self._negate(self.src_port, MIN_PORT, MAX_PORT,\
-                self.src_port_neg)
-        dst_ports = self._negate(self.dst_port, MIN_PORT, MAX_PORT,\
-                self.dst_port_neg)
-        prots = self._negate(self.protocol, MIN_PROT, MAX_PROT,\
-                self.prot_neg)
+        src_nets = self._negate(self.src_host, MIN_ADDR, MAX_ADDR,
+                                self.src_host_neg)
+        dst_nets = self._negate(self.dst_host, MIN_ADDR, MAX_ADDR,
+                                self.dst_host_neg)
+        src_ports = self._negate(self.src_port, MIN_PORT, MAX_PORT,
+                                 self.src_port_neg)
+        dst_ports = self._negate(self.dst_port, MIN_PORT, MAX_PORT,
+                                 self.dst_port_neg)
+        prots = self._negate(self.protocol, MIN_PROT, MAX_PROT,
+                             self.prot_neg)
         for src_net in src_nets:
             for dst_net in dst_nets:
                 for src_port in src_ports:
                     for dst_port in dst_ports:
                         for prot in prots:
                             rule = Rule(src_net, dst_net, src_port, dst_port,
-                                    prot, self.action, self.rule_id)
+                                        prot, self.action, self.rule_id)
                             rules.append(rule)
         return rules
 
     def __str__(self):
         s1 = "RawRule: sn%s dn%s sp%s dp%s prot%s"\
-        % (self.src_host, self.dst_host, self.src_port, self.dst_port,
-                   self.protocol)
+             % (self.src_host, self.dst_host, self.src_port, self.dst_port,
+                self.protocol)
         s2 = " id(%s) action(%s) neg(%i %i %i %i %i)"\
-               % (self.rule_id, self.action, self.src_host_neg,
-                   self.dst_host_neg, self.src_port_neg, self.dst_port_neg,
-                   self.prot_neg)
+             % (self.rule_id, self.action, self.src_host_neg,
+                self.dst_host_neg, self.src_port_neg, self.dst_port_neg,
+                self.prot_neg)
         return s1 + s2
 
     def __repr__(self):
@@ -419,18 +422,18 @@ class RawRule(object):
     def __eq__(self, other):
         if not isinstance(other, RawRule):
             return False
-        return self.src_host == other.src_host and\
-        self.dst_host == other.dst_host and\
-        self.src_port == other.src_port and\
-        self.dst_port == other.dst_port and\
-        self.protocol == other.protocol and\
-        self.action == other.action and\
-        self.src_host_neg == other.src_host_neg and\
-        self.dst_host_neg == other.dst_host_neg and\
-        self.src_port_neg == other.src_port_neg and\
-        self.dst_port_neg == other.dst_port_neg and\
-        self.prot_neg     == other.prot_neg and\
-        self.rule_id == other.rule_id
+        return (self.src_host == other.src_host and
+                self.dst_host == other.dst_host and
+                self.src_port == other.src_port and
+                self.dst_port == other.dst_port and
+                self.protocol == other.protocol and
+                self.action == other.action and
+                self.src_host_neg == other.src_host_neg and
+                self.dst_host_neg == other.dst_host_neg and
+                self.src_port_neg == other.src_port_neg and
+                self.dst_port_neg == other.dst_port_neg and
+                self.prot_neg == other.prot_neg and
+                self.rule_id == other.rule_id)
 
     def __ne__(self, other):
         return not self == other
@@ -441,8 +444,8 @@ class Rule(object):
         fields.
     """
 
-    def __init__(self, src_net, dst_net, src_ports, dst_ports, prots,\
-                       action, rule_id):
+    def __init__(self, src_net, dst_net, src_ports, dst_ports, prots, action,
+                 rule_id):
         self.i1 = src_net
         self.i2 = dst_net
         self.i3 = src_ports
@@ -452,20 +455,21 @@ class Rule(object):
         self.rule_id = rule_id
 
     def __eq__(self, other):
-        return  self.i1 == other.i1\
-            and self.i2 == other.i2\
-            and self.i3 == other.i3\
-            and self.i4 == other.i4\
-            and self.i5 == other.i5\
-            and self.rule_id == other.rule_id\
-            and self.action == other.action
+        return (self.i1 == other.i1 and
+                self.i2 == other.i2 and
+                self.i3 == other.i3 and
+                self.i4 == other.i4 and
+                self.i5 == other.i5 and
+                self.rule_id == other.rule_id and
+                self.action == other.action)
 
     def __ne__(self, other):
         return not self == other
 
     def __str__(self):
-        return "Rule:  %s %s %s %s %s %s %s" % (self.i1, self.i2,
-               self.i3, self.i4, self.i5, self.action, self.rule_id)
+        return "Rule:  %s %s %s %s %s %s %s"\
+               % (self.i1, self.i2, self.i3, self.i4, self.i5, self.action,
+                  self.rule_id)
 
     def __repr__(self):
         return str(self)
@@ -487,16 +491,18 @@ class Rule(object):
         if len(i5_intersect) == 0:
             return [self]
 
-        r1 = [ Rule(i, self.i2, self.i3, self.i4, self.i5,\
-               self.action, self.rule_id) for i in (self.i1 - other.i1) ]
-        r2 = [ Rule(i1_intersect[0], i, self.i3, self.i4, self.i5,\
-               self.action, self.rule_id) for i in (self.i2 - other.i2) ]
-        r3 = [ Rule(i1_intersect[0], i2_intersect[0], i, self.i4, self.i5,\
-               self.action, self.rule_id) for i in (self.i3 - other.i3) ]
-        r4 = [ Rule(i1_intersect[0], i2_intersect[0], i3_intersect[0], i, self.i5,\
-               self.action, self.rule_id) for i in (self.i4 - other.i4) ]
-        r5 = [ Rule(i1_intersect[0], i2_intersect[0], i3_intersect[0], i4_intersect[0], i,\
-               self.action, self.rule_id) for i in (self.i5 - other.i5) ]
+        r1 = [Rule(i, self.i2, self.i3, self.i4, self.i5,
+              self.action, self.rule_id) for i in (self.i1 - other.i1)]
+        r2 = [Rule(i1_intersect[0], i, self.i3, self.i4, self.i5,
+              self.action, self.rule_id) for i in (self.i2 - other.i2)]
+        r3 = [Rule(i1_intersect[0], i2_intersect[0], i, self.i4, self.i5,
+              self.action, self.rule_id) for i in (self.i3 - other.i3)]
+        r4 = [Rule(i1_intersect[0], i2_intersect[0], i3_intersect[0], i,
+              self.i5, self.action, self.rule_id) for i in
+              (self.i4 - other.i4)]
+        r5 = [Rule(i1_intersect[0], i2_intersect[0], i3_intersect[0],
+              i4_intersect[0], i, self.action, self.rule_id) for i in
+              (self.i5 - other.i5)]
         return r1 + r2 + r3 + r4 + r5
 
     def sample_packet(self):
@@ -516,14 +522,14 @@ class Rule(object):
 
         if ok_sa or ok_da or ok_sp or ok_dp or ok_pr:
             return Packet(sa, da, sp, dp, pr, self.action, self.rule_id)
-#         print_error_and_exit("Error : couldn't generate a negative packet for\
-#                 rule ", self)
-        raise TBGenError("Error : couldn't generate a negative packet for rule ")
+        raise TBGenError("Error : couldn't generate a negative packet\
+                         for rule ")
 
 
 class Packet(object):
-    """ Class "Packet" defines a single packet in a firewall rule and 
-        its characteristics, like source/destination, protocol, action, rule id.
+    """ Class "Packet" defines a single packet in a firewall rule and
+        its characteristics, like source/destination, protocol, action,
+        rule id.
     """
 
     def __init__(self, sa, da, sp, dp, pr, ac, rid):
@@ -536,21 +542,21 @@ class Packet(object):
         self.rid = rid  # rule id for this packet
 
     def __str__(self):
-        return "Packet:  %s %s %s %s %s %s %s" % (self.sa, self.da,
-               self.sp, self.dp, self.pr, self.ac, self.rid)
+        return "Packet:  %s %s %s %s %s %s %s" %\
+               (self.sa, self.da, self.sp, self.dp, self.pr, self.ac, self.rid)
 
     def __repr__(self):
         return str(self)
 
     def in_rule(self, rule):
         I = Interval
-        return  I(self.sa, self.sa).is_subinterval(rule.i1) and \
-                I(self.da, self.da).is_subinterval(rule.i2) and \
-                I(self.sp, self.sp).is_subinterval(rule.i3) and \
-                I(self.dp, self.dp).is_subinterval(rule.i4) and \
-                I(self.pr, self.pr).is_subinterval(rule.i5) and \
-                self.ac == rule.action and \
-                self.rid == rule.rule_id
+        return (I(self.sa, self.sa).is_subinterval(rule.i1) and
+                I(self.da, self.da).is_subinterval(rule.i2) and
+                I(self.sp, self.sp).is_subinterval(rule.i3) and
+                I(self.dp, self.dp).is_subinterval(rule.i4) and
+                I(self.pr, self.pr).is_subinterval(rule.i5) and
+                self.ac == rule.action and
+                self.rid == rule.rule_id)
 
 
 class Tools(object):
@@ -608,7 +614,8 @@ class Tools(object):
             return_set = [rset[index]]
             for i in rset[:index]:
                 try:
-                    return_set = filter(None, [rule - i for rule in return_set])[0]
+                    return_set = filter(None, [rule - i for
+                                        rule in return_set])[0]
                 except IndexError:
                     return_set = []
             return return_set
@@ -683,16 +690,16 @@ class XML(object):
         """ Generates n positive or negative Packets (via rule_affinity)
             for rule 'rule' and Node 'parent'. """
         for i in xrange(1, n+1):
-            if rule_affinity == True:
+            if rule_affinity is True:
                 packet_aff = 'p'  # positive Packet
                 p = rule.sample_packet()
             else:
                 packet_aff = 'n'  # negative Packet
                 p = rule.sample_neg_packet()
 
-            self.create_xml_packet(parent, packet_aff + str(i), str(p.sa), \
-                    str(p.da), str(p.sp), str(p.dp), str(p.pr), p.ac, \
-                    str(rule_affinity))
+            self.create_xml_packet(parent, packet_aff + str(i), str(p.sa),
+                                   str(p.da), str(p.sp), str(p.dp), str(p.pr),
+                                   p.ac, str(rule_affinity))
 
 
 # ------------------------ MAIN ---------------------------------------------
@@ -722,7 +729,6 @@ def main():
     _xml = XML()
     # Create a root Element
     root = Element('tests')
-
 
     for i in xrange(len(norm_rules)):
         # ------- Generate Tests for ONLY one rule in initial rule-set ----
@@ -795,10 +801,11 @@ def main_debug2():
     except TBGenError as e:
         T.print_error_and_exit(e.m, errno.EINVAL)
 
-    for i,line in enumerate(lines):
-        print i, line,'\n'
+    for i, line in enumerate(lines):
+        print i, line, '\n'
 
-if __name__ == '__main__': main()
+
+if __name__ == '__main__':
+    main()
 # if __name__ == '__main__': main_debug()
 # if __name__ == '__main__': main_debug2()
-
