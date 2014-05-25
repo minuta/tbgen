@@ -17,7 +17,7 @@ import os
 import pytest
 import errno
 from sys import argv
-from pdb import set_trace
+# from pdb import set_trace
 from random import randint
 from xml.etree.ElementTree import ElementTree, Element, SubElement, tostring
 from xml.dom import minidom
@@ -247,8 +247,6 @@ class Parser(object):
     def parse(self):
         file_lines = self.lines
         rules = []
-        error = ''
-        message = OK
         for rule_id, line in enumerate(file_lines):
             parts = line.split()
 
@@ -576,8 +574,6 @@ class Tools(object):
         exit(error_num)
 
     def check_args(self, argv):
-        message = OK
-        error = None
         fname = None
         pos_tests = 0
         neg_tests = 0
@@ -670,11 +666,11 @@ class XML(object):
         """ Creates an XML Element 'packet' for given args. """
         packet = SubElement(parent, 'packet')
         packet.set('id', pid)
-        src_addr = SubElement(packet, 'src_addr').text = sa
-        dst_addr = SubElement(packet, 'dst_addr').text = da
-        src_port = SubElement(packet, 'src_port').text = sp
-        dst_port = SubElement(packet, 'dst_port').text = dp
-        protocol = SubElement(packet, 'protocol').text = pr
+        SubElement(packet, 'src_addr').text = sa
+        SubElement(packet, 'dst_addr').text = da
+        SubElement(packet, 'src_port').text = sp
+        SubElement(packet, 'dst_port').text = dp
+        SubElement(packet, 'protocol').text = pr
 
         if ac == 1:
             act = 'PASS'
@@ -682,9 +678,9 @@ class XML(object):
             act = 'DROP'
         else:
             act = str(ac)
-        action = SubElement(packet, 'action').text = act
+        SubElement(packet, 'action').text = act
 
-        match = SubElement(packet, 'match').text = ma
+        SubElement(packet, 'match').text = ma
 
     def generate_xml_packets_for_rule(self, parent, rule, n, rule_affinity):
         """ Generates n positive or negative Packets (via rule_affinity)
