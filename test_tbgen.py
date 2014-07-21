@@ -26,7 +26,7 @@ class TestInterval(object):
 
         assert not (x.has_intersection(w) and w.has_intersection(x))
 
-        assert x.has_intersection(v) and  v.has_intersection(x)
+        assert x.has_intersection(v) and v.has_intersection(x)
 
         assert y.has_intersection(w) and w.has_intersection(y)
 

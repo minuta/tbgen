@@ -149,6 +149,8 @@ class Interval(object):
             return [self]
 
     def intersect(self, other):
+        """ returns an intersection between 2 intervals.
+            if no intersection, it returns an empty list.  """
         if self.has_intersection(other):
             if self == other or self.is_subinterval(other):
                 return [self]
@@ -473,31 +475,33 @@ class Rule(object):
         return str(self)
 
     def __sub__(self, other):
+        """ Difference of two 5-dim-sets. """
+
+        # if no intersection in at least one dimension =>No intersection at all
+        # => function returns a list with a self-rule
         i1_intersect = self.i1.intersect(other.i1)
-        if len(i1_intersect) == 0:
-            return [self]
         i2_intersect = self.i2.intersect(other.i2)
-        if len(i2_intersect) == 0:
-            return [self]
         i3_intersect = self.i3.intersect(other.i3)
-        if len(i3_intersect) == 0:
-            return [self]
         i4_intersect = self.i4.intersect(other.i4)
-        if len(i4_intersect) == 0:
-            return [self]
         i5_intersect = self.i5.intersect(other.i5)
-        if len(i5_intersect) == 0:
+        if (len(i1_intersect) & len(i2_intersect) & len(i3_intersect) & 
+                len(i4_intersect) & len(i5_intersect)) == 0:
             return [self]
+
 
         r1 = [Rule(i, self.i2, self.i3, self.i4, self.i5,
               self.action, self.rule_id) for i in (self.i1 - other.i1)]
+
         r2 = [Rule(i1_intersect[0], i, self.i3, self.i4, self.i5,
               self.action, self.rule_id) for i in (self.i2 - other.i2)]
+
         r3 = [Rule(i1_intersect[0], i2_intersect[0], i, self.i4, self.i5,
               self.action, self.rule_id) for i in (self.i3 - other.i3)]
+
         r4 = [Rule(i1_intersect[0], i2_intersect[0], i3_intersect[0], i,
               self.i5, self.action, self.rule_id) for i in
               (self.i4 - other.i4)]
+
         r5 = [Rule(i1_intersect[0], i2_intersect[0], i3_intersect[0],
               i4_intersect[0], i, self.action, self.rule_id) for i in
               (self.i5 - other.i5)]
