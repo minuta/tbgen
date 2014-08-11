@@ -438,9 +438,40 @@ class RawRule(object):
     def __ne__(self, other):
         return not self == other
 
+class Rule2(object):
+    """ Represents a 2d-Rule and used for testing sub-function. """ 
+
+    def __init__(self, src_ports, dst_ports):
+        self.i1 = src_ports
+        self.i2 = dst_ports
+
+    def __eq__(self, other):
+        return (self.i1 == other.i1 and self.i2 == other.i2)
+
+    def __ne__(self, other):
+        return not self == other
+    
+    def __str__(self):
+        return "Rule2:  %s  %s" % (self.i1, self.i2)
+
+    def __repr__(self):
+        return str(self)
+
+    def __sub__(self, other):
+        i1_intersect = self.i1.intersect(other.i1)
+        i2_intersect = self.i2.intersect(other.i2)
+        if (len(i1_intersect) & len(i2_intersect)) == 0:
+            return [self]
+
+        r1 = [Rule2(i, self.i2) for i in (self.i1 - other.i1)]
+
+        r2 = [Rule2(i1_intersect[0], i) for i in (self.i2 - other.i2)]
+
+        return r1 + r2
+
 
 class Rule(object):
-    """ Represents  a normalized firewall rule, i.e. there are no more negated
+    """ Represents a normalized firewall rule, i.e. there are no more negated
         fields.
     """
 

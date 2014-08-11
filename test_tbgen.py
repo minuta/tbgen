@@ -1,6 +1,6 @@
 from tbgen import Tools, Interval, IntervalList, Parser, RawRule,\
         Rule, Packet, XML, TBGenError, PASS, DROP, ERROR_STR1, ERROR_STR2,ERROR_STR3,\
-        ERROR_STR4, ERROR_STR5, ERROR_STR7, OK, NMIN, NMAX
+        ERROR_STR4, ERROR_STR5, ERROR_STR7, OK, NMIN, NMAX, Rule2
 
 from xml.etree.ElementTree import ElementTree, Element, SubElement, tostring
 
@@ -476,6 +476,123 @@ class TestRawRule(object):
         assert len(normalized_rules) == 32
 
 
+class TestRule2(object):
+
+    # Max.num of new rules = 4
+
+    # Other contains Self in 1 Dim and Self contains Other in 2. Dim
+    def test_other_contains_self_19(self):
+        I = Interval
+        r1 = Rule2(I(3, 5), I(3, 5))
+        r2 = Rule2(I(1, 9), I(3, 4))
+        
+        r3 = Rule2(I(3,5), I(5,5))
+        assert r1 - r2 == [r3]
+
+    # Other contains Self in 1 Dim and has intersection with Self in 2.Dim
+    def test_other_contains_self_20(self):
+        I = Interval
+        r1 = Rule2(I(3, 5), I(3, 5))
+        r2 = Rule2(I(1, 9), I(4, 7))
+        
+        r3 = Rule2(I(3, 5), I(3, 3))
+        assert r1 - r2 == [r3]
+
+    def test_other_contains_self_21(self):
+        I = Interval
+        r1 = Rule2(I(3, 7), I(3, 5))
+        r2 = Rule2(I(1, 4), I(1, 9))
+        
+        r3 = Rule2(I(5, 7), I(3, 5))
+        assert r1 - r2 == [r3]
+
+
+    # Other contains Self : no identical borders
+    def test_other_contains_self_1(self):
+        I = Interval
+        r1 = Rule2(I(3, 5), I(3, 5))
+        r2 = Rule2(I(1, 9), I(1, 9))
+        assert r1 - r2 == []
+
+    # Other contains Self : some identical borders
+    def test_other_contains_self_2(self):
+        I = Interval
+        r1 = Rule2(I(3, 5), I(3, 5))
+        r2 = Rule2(I(3, 9), I(3, 9))
+        assert r1 - r2 == []
+
+    # Self has no intersection with Other
+    def test_no_intersection_3(self):
+        I = Interval
+        r1 = Rule2(I(1, 5), I(1, 5))
+        r2 = Rule2(I(7, 9), I(7, 9))
+        assert r1 - r2 == [r1]
+
+    # Tests, where Self contains Other : 
+
+    # self, other differ in only 1 Dimension  (5 test-functions)
+    def test_self_contains_other_4(self):
+        I = Interval
+        r1 = Rule2(I(1, 9), I(1, 9))
+        r2 = Rule2(I(3, 5), I(1, 9))
+
+        r3 = Rule2(I(1, 2), I(1, 9))
+        r4 = Rule2(I(6, 9), I(1, 9))
+
+#         import pdb; pdb.set_trace()
+        assert r1 - r2 == [r3, r4]
+
+    def test_self_contains_other_5(self):
+        I = Interval
+        r1 = Rule2(I(1, 9), I(1, 9))
+        r2 = Rule2(I(1, 9), I(3, 5))
+
+        r3 = Rule2(I(1, 9), I(1, 2))
+        r4 = Rule2(I(1, 9), I(6, 9))
+        assert r1 - r2 == [r3, r4]
+
+    # self, other differ in 2 Dimensions 
+    def test_self_contains_other_9(self):
+        I = Interval
+        r1 = Rule2(I(1, 9), I(1, 9))
+        r2 = Rule2(I(3, 5), I(3, 5))
+
+        r3 = Rule2(I(1, 2), I(1, 9))
+        r4 = Rule2(I(6, 9), I(1, 9))
+        r5 = Rule2(I(3, 5), I(1, 2))
+        r6 = Rule2(I(3, 5), I(6, 9))
+
+        assert r1 - r2 == [r3, r4, r5, r6]
+
+    # Tests, where Self and Other have an Intersection: 
+    # in each case we get exactly 5 Rules
+    def test_self_contains_other_16(self):
+        I = Interval
+        r1 = Rule2(I(1, 6), I(1, 6))
+        r2 = Rule2(I(4, 9), I(4, 9))
+
+        r3 = Rule2(I(1, 3), I(1, 6))
+        r4 = Rule2(I(4, 6), I(1, 3))
+        assert r1 - r2 == [r3, r4]
+
+    # Intersection in not all 2 Dimensions => No Intersection at all 
+    # Intersection in 1 Dimension
+    def test_self_contains_other_17(self):
+        I = Interval
+        r1 = Rule2(I(1, 6), I(1, 6))
+        r2 = Rule2(I(3, 9), I(7, 9))
+
+        assert r1 - r2 == [r1]
+
+    def test_self_contains_other_18(self):
+        I = Interval
+        r1 = Rule2(I(1, 6), I(1, 6))
+        r2 = Rule2(I(7, 9), I(3, 9))
+
+        assert r1 - r2 == [r1]
+
+
+
 class TestRule(object):
 
     # Other contains Self : no identical borders
@@ -943,7 +1060,6 @@ class TestTools(object):
         rset = [r2, r1]
         assert T.dif(1, rset) == []
 
-#     @skip
     def test_dif5(self):
         I = Interval
         T = Tools()
