@@ -59,6 +59,8 @@ ERROR_STR4 = 'Usage: python %s <Firewall-Rule-Set-File> ' % argv[0]+ERROR_STR41
 ERROR_STR5 = 'Error : File doesn\'t exist or is empty!\n'
 ERROR_STR6 = 'Error : Invalid Rule Structure in Rule : '
 ERROR_STR7 = "Error : Wrong argument type!\n"
+
+counter = 0 # Counter of rule difs (Used only for Debug and statistics)
 # --------------------------------------------------------------------
 
 
@@ -508,6 +510,9 @@ class Rule(object):
     def __sub__(self, other):
         """ Difference of two 5-dim-sets. """
 
+        global counter
+        counter += 1
+
         # if no intersection in at least one dimension =>No intersection at all
         # => function returns a list with a self-rule
         i1_intersect = self.i1.intersect(other.i1)
@@ -783,6 +788,14 @@ def main():
 
     print _xml.pretty_xml_format(root)
 
+def test_counter():
+    I = Interval
+    r1 = Rule(I(3, 5), I(3, 5), I(3, 5), I(3, 5), I(3, 5), DROP, 1)
+    r2 = Rule(I(1, 9), I(1, 9), I(1, 9), I(1, 9), I(1, 9), DROP, 1)
+    for i in range(10):
+        r1-r2                         
+    assert counter == 10 
+
 
 def main_debug():
     """ used for Analysis of generated independent rules """
@@ -804,39 +817,25 @@ def main_debug():
 
     norm_rules = [l.normalize() for l in lines]
 
-    print "\nID, Num of independ. rules : \n"
+#     print "\nNum of lines in original ruleset: ", len(lines)
+#     print "\nNum of lines in normalized ruleset: ", len(norm_rules)
+# 
+#     print "\nID, Num of independ. rules for this ID: \n"
+# 
+#     new_rules = 0
     for i in xrange(len(norm_rules)):
         # ------- Generate Tests for ONLY one rule in initial rule-set ----
 
         result_rules = T.make_independent(i, norm_rules)
-
+    print counter
         # print ID of parent rule and corresponding 'independent' rules
-        print i, len(result_rules)
+#         num_rules = len(result_rules)
+#         new_rules += num_rules
+#         print i, num_rules
+#     print "\nNum of new rules: ", new_rules 
+#     print "Num of rule difs: ", counter
 
 
-def main_debug2():
 
-    T = Tools()
-
-    try:
-        fname, pos, neg = T.check_args(argv)
-    except TBGenError as e:
-        T.print_error_and_exit(e.m, errno.EINVAL)
-
-    with open(fname) as f:
-        lines = f.readlines()
-
-    try:
-        P = Parser(lines)
-        lines = P.parse()
-    except TBGenError as e:
-        T.print_error_and_exit(e.m, errno.EINVAL)
-
-    for i, line in enumerate(lines):
-        print i, line, '\n'
-
-
-if __name__ == '__main__':
-    main()
-# if __name__ == '__main__': main_debug()
-# if __name__ == '__main__': main_debug2()
+if __name__ == '__main__': 
+    main_debug()
