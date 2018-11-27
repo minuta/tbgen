@@ -796,9 +796,8 @@ def test_counter():
         r1-r2                         
     assert counter == 10 
 
-
 def main_debug():
-    """ used for Analysis of generated independent rules """
+    """ used for perfomance analysis """
     T = Tools()
 
     try:
@@ -838,4 +837,4 @@ def main_debug():
 
 
 if __name__ == '__main__': 
-    main_debug()
+    main()
